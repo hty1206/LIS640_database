@@ -1,0 +1,12 @@
+version: 2
+
+exposures:
+  - name: occupancy_hourly_dashboard
+    type: dashboard
+    url: https://example.com/your-dashboard
+    owner:
+      name: ops_team
+      email: ops@example.com
+    depends_on:
+      - ref('marts.occupancy_hourly_report')
+    description: "Example exposure for the occupancy hourly dashboard"

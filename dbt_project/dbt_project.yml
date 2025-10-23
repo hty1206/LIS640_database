@@ -1,0 +1,35 @@
+name: 'lis640_dbt'
+version: '1.0'
+config-version: 2
+profile: 'lis640'
+
+# Paths
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+
+models:
+  # Package / project namespace
+  lis640_dbt:
+    # sensible default during development: view. Override per-folder below.
+    +materialized: view
+
+    # Staging: lightweight cleaning / renaming. Keep as view while developing.
+    staging:
+      +schema: staging
+      +materialized: view
+
+    # Intermediate: transformations such as event-hour expansion.
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+
+    # Core: reusable, analysis-ready models. Consider materializing as table/incremental in production.
+    core:
+      +schema: core
+      +materialized: view
+
+    # Marts: BI-facing models. Default to table for performance (change if you prefer views).
+    marts:
+      +schema: marts
+      +materialized: table

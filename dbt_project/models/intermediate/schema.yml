@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: events_by_hour
+    description: "Intermediate: events expanded to hourly grain (adapter-specific implementation required)."
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+      - name: sequence_hour
+        description: "Helper index for expanded hour row"

@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: dim_event
+    description: "Core/Mart: enriched events (standardized times) with tag_name"
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+      - name: tag_id
+        tests:
+          - not_null
+  - name: final_occupancy_event
+    columns:
+      - name: facility_id
+        tests:
+          - not_null
+        description: "FK -> facilities.facility_id"
+      - name: event_id
+        description: "Nullable: matched event id for that hour"
+        tests:
+          - relationships:
+              to: ref('dim_event')
+              field: event_id

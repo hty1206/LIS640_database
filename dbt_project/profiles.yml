@@ -1,0 +1,12 @@
+# Example profiles.yml entries for dbt (fill with your credentials)
+lis640:
+  target: dev
+  outputs:
+    dev:
+      type: mysql  # or mysql, bigquery, snowflake
+      host: <HOST>
+      user: <USER>
+      pass: <PASSWORD>
+      port: 3306
+      dbname: <DB_NAME>
+      schema: <SCHEMA>

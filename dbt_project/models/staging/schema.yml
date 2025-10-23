@@ -1,0 +1,30 @@
+version: 2
+
+sources:
+  - name: mysql_lis640
+    database: LIS640
+    schema: LIS640
+    tables:
+      - name: Facilities
+      - name: Occupancy
+      - name: Events
+      - name: Tags
+      - name: Weather
+
+models:
+  - name: stg_occupancy
+    description: "Staging occupancy table"
+    columns:
+      - name: occu_id
+        tests:
+          - not_null
+  - name: stg_events
+    description: "Staging events table"
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+          - unique
+      - name: event_start
+        tests:
+          - not_null
