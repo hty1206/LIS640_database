@@ -1,0 +1,135 @@
+/* ===== Theme variables ===== */
+:root {
+  /* Dark theme (deep blue) */
+  --bg:#0a1124;
+  --surface:#0f1b39;
+  --text:#e6ecff;
+  --muted:#8ea2c6;
+  --accent:#3ea2ff;
+  --selected:#3ea2ff;
+  --border:rgba(255,255,255,0.14);
+  --ring:rgba(62,162,255,0.25);
+  --card:rgba(255,255,255,0.06);
+  --date-size:14px; /* adjustable */
+}
+
+/* Light theme (soft light gray) */
+html[data-theme="light"] {
+  --bg:#e8e9ed;
+  --surface:#ffffff;
+  --text:#0b1321;
+  --muted:#5b636e;
+  --accent:#1e90ff;
+  --selected:#1e90ff;
+  --border:rgba(0,0,0,0.12);
+  --ring:rgba(30,144,255,0.18);
+  --card:#ffffff;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background: var(--bg); 
+  color:var(--text);
+}
+
+/* Navbar */
+.navbar{
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between;
+  padding:10px 16px; 
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; background:var(--surface); 
+  z-index:10
+}
+.navbar .brand{font-weight:800; letter-spacing:.5px}
+.navbar ul{display:flex; gap:12px; list-style:none; margin:0; padding:0}
+.navbar a{
+  color:var(--text); 
+  text-decoration:none; 
+  padding:8px 10px; 
+  border-radius:8px; 
+  border:1px solid transparent
+}
+.navbar a:hover{
+    border-color:var(--accent); 
+    box-shadow:0 0 0 3px var(--ring)
+}
+.theme-btn{
+  background:var(--surface); 
+  color:var(--text);
+  border:1px solid var(--border); 
+  border-radius:10px; 
+  padding:8px 12px; cursor:pointer
+}
+.theme-btn:hover{
+    border-color:var(--accent); 
+    box-shadow:0 0 0 3px var(--ring)
+}
+
+.container{max-width:1200px; margin:18px auto; padding:0 16px}
+.view.hidden{display:none}
+.panel{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px}
+.control-bar{margin-bottom:14px}
+.row{display:flex; align-items:center}
+.gap{gap:8px}
+.small{font-size:12px}
+.muted{color:var(--muted)}
+.inline{display:flex; align-items:center; gap:6px}
+.divider{height:1px; background:var(--border); margin:12px 0}
+
+/* Forms (for inputs in Tableau view) */
+input[type="url"]{
+  background:var(--surface); color:var(--text);
+  border:1px solid var(--border); border-radius:8px; padding:10px; flex:1
+}
+button{
+  background:var(--surface); color:var(--text);
+  border:1px solid var(--border); border-radius:10px; padding:8px 12px; cursor:pointer
+}
+button:hover{border-color:var(--accent); box-shadow:0 0 0 4px var(--ring)}
+
+/* Calendar */
+.wrap{width:min(100%, 1600px)}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08); padding:18px; backdrop-filter:blur(6px)
+}
+.header{
+  display:grid; grid-template-columns:1fr 1fr auto; align-items:center; gap:12px; margin-bottom:12px
+}
+.title{text-align:center; font-weight:700; letter-spacing:.5px; font-size:clamp(18px, 3vw, 22px)}
+.controls, .right-controls{display:flex; gap:8px}
+select{
+  background:var(--surface); color:var(--text);
+  border:1px solid var(--border); border-radius:10px; padding:8px 10px; cursor:pointer
+}
+select:hover{border-color:var(--accent); box-shadow:0 0 0 4px var(--ring)}
+
+.calendar{display:grid; grid-template-rows:auto 1fr; gap:8px}
+.weekdays, .grid{display:grid; grid-template-columns:repeat(7, 1fr); gap:6px}
+.weekday{text-align:center; font-size:12px; color:var(--muted); letter-spacing:.5px; padding:8px 0 4px}
+.cell{
+  aspect-ratio:1/1; border-radius:14px; border:1px solid var(--border);
+  background:rgba(0,0,0,0.05);
+  display:grid; grid-template-rows:auto 1fr; padding:10px; position:relative;
+  transition:background .2s, border-color .2s
+}
+html[data-theme="light"] .cell{background:rgba(0,0,0,0.03)}
+.cell:hover{border-color:rgba(0,0,0,.25); background:rgba(0,0,0,.08); cursor:pointer}
+.date-num{font-weight:700; font-size:var(--date-size)}
+.badges{position:absolute; inset:auto 8px 8px auto; display:flex; gap:4px; flex-wrap:wrap}
+.badge{
+  font-size:10px; padding:2px 6px; border-radius:999px;
+  background:rgba(62,162,255,.15); border:1px solid rgba(62,162,255,.35); color:#9bc8ff
+}
+.selected{border-color:var(--selected)!important; box-shadow:0 0 0 4px var(--ring)}
+.today{background:linear-gradient(180deg, rgba(62,162,255,.12), rgba(62,162,255,.04)); border-color:rgba(62,162,255,.3)}
+.foot{margin-top:10px; color:var(--muted); font-size:14px}
+
+/* Tableau */
+.tableau-frame{margin-top:12px; border:1px solid var(--border); border-radius:14px; overflow:hidden}
+.tableau-frame iframe{display:block; width:100%; height:70vh; border:0}

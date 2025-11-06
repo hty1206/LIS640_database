@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Tagging Project</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="brand">Data Tagging Project</div>
+    <ul>
+      <li><a href="#calendar" data-link>Calendar</a></li>
+      <li><a href="#tableau" data-link>Tableau</a></li>
+    </ul>
+    <button id="themeToggle" class="theme-btn" aria-label="Toggle theme">Dark</button>
+  </nav>
+
+  <main class="container">
+    <!-- Calendar View -->
+    <section id="view-calendar" class="view hidden">
+      <div class="panel control-bar">
+        <div class="row gap">
+          <label class="inline">Date size: <output id="dateSizeVal">14</output> px</label>
+          <input id="dateSizeRange" type="range" min="10" max="28" step="1" value="14" />
+        </div>
+      </div>
+
+      <div class="wrap card">
+        <header class="header">
+          <div class="controls">
+            <button id="todayBtn" aria-label="Back to current month">Today</button>
+          </div>
+          <div class="title" id="titleText">—</div>
+          <div class="right-controls">
+            <button id="prevBtn" aria-label="Previous month">◀</button>
+            <select id="monthSelect" aria-label="Select month"></select>
+            <select id="yearSelect" aria-label="Select year"></select>
+            <button id="nextBtn" aria-label="Next month">▶</button>
+          </div>
+        </header>
+
+        <section class="calendar">
+          <div class="weekdays" id="weekdays"></div>
+          <div class="grid" id="grid"></div>
+        </section>
+
+        <footer class="foot">
+          <div id="info">Selected Date: <span id="picked">—</span></div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- Tableau View -->
+    <section id="view-tableau" class="view hidden">
+      <div class="panel">
+        <h2>Embed Tableau</h2>
+        <div class="row gap">
+          <input id="tableauUrl" type="url" placeholder="Paste a Tableau Public/Server visualization URL" />
+          <button id="loadTableau">Load</button>
+        </div>
+        <p class="muted small">Example: any Tableau Public visualization link.</p>
+      </div>
+      <div class="tableau-frame">
+        <iframe id="tableauFrame" title="Tableau Embed" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
