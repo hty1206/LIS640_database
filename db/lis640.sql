@@ -1,0 +1,1 @@
+SELECT * FROM LIS640.Tags;
