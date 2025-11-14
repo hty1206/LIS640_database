@@ -17,31 +17,38 @@
       </ul>
 
       <div class="nav-right">
-        <button id="newEventBtn" class="add-event-btn">＋ Create New Event</button>
         <button id="themeToggle" class="theme-btn">Light</button>
       </div>
     </nav>
+
 
     <main class="container">
       <!-- Calendar View -->
       <section id="view-calendar" class="view">
         <div class="panel control-bar">
-          <div class="row gap">
-            <label class="inline">
-              Date size:
-              <output id="dateSizeVal">14</output>
-              px
-            </label>
-            <input
-              id="dateSizeRange"
-              type="range"
-              min="10"
-              max="28"
-              step="1"
-              value="14"
-            />
+          <div class="row gap space-between">
+            <div class="inline gap">
+              <label class="inline">
+                Date size:
+                <output id="dateSizeVal">14</output>
+                px
+              </label>
+
+              <input
+                id="dateSizeRange"
+                type="range"
+                min="10"
+                max="28"
+                step="1"
+                value="14"
+              />
+            </div>
+
+            <!-- ⭐ 新位置的 Create New Event，id 一樣是 newEventBtn -->
+            <button id="newEventBtn" class="add-event-btn">＋ Create New Event</button>
           </div>
         </div>
+
 
         <!-- ⬇ 左右並排的 layout -->
         <div class="calendar-layout">
