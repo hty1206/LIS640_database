@@ -1,229 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Data Tagging Project</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Data Tagging Project</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="brand">Data Tagging Project</div>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="brand">Data Tagging Project</div>
-    <ul>
-      <li><a href="#calendar" data-link>Calendar</a></li>
-      <li><a href="#tableau" data-link>Tableau</a></li>
-    </ul>
+      <ul>
+        <li><a href="#calendar" data-link>Calendar</a></li>
+        <li><a href="#tableau" data-link>Tableau</a></li>
+      </ul>
 
-    <button id="themeToggle" class="theme-btn" aria-label="Toggle theme">Dark</button>
-  </nav>
+      <div class="nav-right">
+        <button id="themeToggle" class="theme-btn">Light</button>
+      </div>
+    </nav>
 
-  <main class="container">
 
-    <!-- ========================================================= -->
-    <!-- Calendar Page -->
-    <!-- ========================================================= -->
-    <section id="view-calendar" class="view">
+    <main class="container">
+      <!-- Calendar View -->
+      <section id="view-calendar" class="view">
+        <div class="panel control-bar">
+          <div class="row gap space-between">
+            <div class="inline gap">
+              <label class="inline">
+                Date size:
+                <output id="dateSizeVal">14</output>
+                px
+              </label>
 
-      <!-- Top control bar -->
-      <div class="panel control-bar">
-        <div class="row gap" style="justify-content:flex-end; align-items:center;">
+              <input
+                id="dateSizeRange"
+                type="range"
+                min="10"
+                max="28"
+                step="1"
+                value="14"
+              />
+            </div>
 
-          <label class="inline">
-            Date size:
-            <output id="dateSizeVal">14</output>
-            px
+            <!-- ⭐ 新位置的 Create New Event，id 一樣是 newEventBtn -->
+            <button id="newEventBtn" class="add-event-btn">＋ Create New Event</button>
+          </div>
+        </div>
+
+
+        <!-- ⬇ 左右並排的 layout -->
+        <div class="calendar-layout">
+          <!-- 左邊：月曆卡片 -->
+          <div class="wrap card">
+            <header class="header">
+              <div class="controls">
+                <button id="todayBtn" aria-label="Back to current month">
+                  Today
+                </button>
+              </div>
+              <div class="title" id="titleText">—</div>
+              <div class="right-controls">
+                <button id="prevBtn" aria-label="Previous month">◀</button>
+                <select id="monthSelect" aria-label="Select month"></select>
+                <select id="yearSelect" aria-label="Select year"></select>
+                <button id="nextBtn" aria-label="Next month">▶</button>
+              </div>
+            </header>
+
+            <section class="calendar">
+              <div class="weekdays" id="weekdays"></div>
+              <div class="grid" id="grid"></div>
+            </section>
+
+            <footer class="foot">
+              <div id="info">
+                Selected Date:
+                <span id="picked">—</span>
+              </div>
+            </footer>
+          </div>
+
+          <!-- 右邊：Tag sidebar（像 Canvas CALENDARS） -->
+          <aside class="tag-sidebar card">
+            <h3>Tags</h3>
+            <ul class="tag-list">
+              <li class="tag-item">
+                <label>
+                  <input type="checkbox" checked data-tag-filter="Anita Hu" />
+                  <span class="tag-name">Academic calendar</span>
+                </label>
+              </li>
+
+              <li class="tag-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked
+                    data-tag-filter="2024 MS Information Orientation"
+                  />
+                  <span class="tag-name">Closure</span>
+                </label>
+              </li>
+
+              <li class="tag-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked
+                    data-tag-filter="COMPSCI320"
+                  />
+                  <span class="tag-name">Sports</span>
+                </label>
+              </li>
+
+              <li class="tag-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked
+                    data-tag-filter="Cybersecurity Awareness 2025"
+                  />
+                  <span class="tag-name">Weather</span>
+                </label>
+              </li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Tableau View -->
+      <section id="view-tableau" class="view hidden">
+        <div class="panel">
+          <h2>Embed Tableau</h2>
+          <div class="row gap">
+            <input
+              id="tableauUrl"
+              type="url"
+              placeholder="Paste a Tableau Public/Server visualization URL"
+            />
+            <button id="loadTableau">Load</button>
+          </div>
+          <p class="muted small">
+            Example: any Tableau Public visualization link.
+          </p>
+        </div>
+        <div class="tableau-frame">
+          <iframe
+            id="tableauFrame"
+            title="Tableau Embed"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== Create Event Modal ===== -->
+    <div id="eventModalOverlay" class="modal-overlay hidden">
+      <div class="modal">
+        <header class="modal-header">
+          <h2>Create New Event</h2>
+          <button id="closeEventModal" class="icon-btn">✕</button>
+        </header>
+
+        <form id="eventForm" class="modal-body">
+          <label class="field">
+            <span class="field-label">Title</span>
+            <input
+              id="eventTitle"
+              type="text"
+              placeholder="Input Event Title..."
+            />
           </label>
 
-          <input
-            id="dateSizeRange"
-            type="range"
-            min="10"
-            max="28"
-            step="1"
-            value="14"
-          />
+          <label class="field">
+            <span class="field-label">Date</span>
+            <input id="eventDate" type="date" />
+          </label>
 
-          <!-- ⭐ Create Event Button (正確位置) -->
-          <button id="newEventBtn" class="add-event-btn">＋ Create New Event</button>
-        </div>
+          <label class="field">
+            <span class="field-label">From</span>
+            <input id="eventStart" type="time" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">To</span>
+            <input id="eventEnd" type="time" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Location</span>
+            <input
+              id="eventLocation"
+              type="text"
+              placeholder="Event location..."
+            />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Tags</span>
+            <select id="eventCal">
+              <option>Academic Calendar</option>
+              <option>Closure</option>
+              <option>Sports</option>
+            </select>
+          </label>
+
+          <div class="modal-footer">
+            <button type="submit" class="primary-btn">Submit</button>
+          </div>
+        </form>
       </div>
-
-      <!-- Two-column layout -->
-      <div class="calendar-layout">
-
-        <!-- Left side : Calendar -->
-        <div class="wrap card">
-          <header class="header">
-            <div class="controls">
-              <button id="todayBtn">Today</button>
-            </div>
-
-            <div class="title" id="titleText">—</div>
-
-            <div class="right-controls">
-              <button id="prevBtn">◀</button>
-              <select id="monthSelect"></select>
-              <select id="yearSelect"></select>
-              <button id="nextBtn">▶</button>
-            </div>
-          </header>
-
-          <section class="calendar">
-            <div class="weekdays" id="weekdays"></div>
-            <div class="grid" id="grid"></div>
-          </section>
-
-          <footer class="foot">
-            <div id="info">Selected Date: <span id="picked">—</span></div>
-          </footer>
-        </div>
-
-        <!-- Right side : Tags Sidebar -->
-        <aside class="tag-sidebar card">
-          <h3>Tags</h3>
-          <ul class="tag-list">
-            <li class="tag-item">
-              <label>
-                <input type="checkbox" checked data-tag-filter="Academic Calendar" />
-                <span class="tag-name">Academic calendar</span>
-              </label>
-            </li>
-
-            <li class="tag-item">
-              <label>
-                <input type="checkbox" checked data-tag-filter="Closure" />
-                <span class="tag-name">Closure</span>
-              </label>
-            </li>
-
-            <li class="tag-item">
-              <label>
-                <input type="checkbox" checked data-tag-filter="Sports" />
-                <span class="tag-name">Sports</span>
-              </label>
-            </li>
-
-            <li class="tag-item">
-              <label>
-                <input type="checkbox" checked data-tag-filter="Weather" />
-                <span class="tag-name">Weather</span>
-              </label>
-            </li>
-          </ul>
-        </aside>
-
-      </div>
-    </section>
-
-    <!-- ========================================================= -->
-    <!-- Tableau Page -->
-    <!-- ========================================================= -->
-    <section id="view-tableau" class="view hidden">
-      <div class="panel">
-        <h2>Telecommunications Dashboard</h2>
-        <p class="muted small">
-          This Tableau visualization is embedded directly (official Tableau embed).
-        </p>
-      </div>
-
-      <div class="tableau-frame" style="margin: 0 auto; max-width: 1400px;">
-        <div class='tableauPlaceholder' id='vizTelecom' style='position: relative'>
-          <noscript>
-            <a href='https://www.tableau.com/'>
-              <img alt='Telecom' 
-                  src='https://public.tableau.com/static/images/Te/Telecommunications_2/Dashboard/1.png' 
-                  style='border: none' />
-            </a>
-          </noscript>
-
-          <object class='tableauViz' style='width:100%; height:90vh; border:0;'>
-            <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> 
-            <param name='embed_code_version' value='3' />
-            <param name='site_root' value='' />
-            <param name='name' value='Telecommunications_2/Dashboard' />
-            <param name='tabs' value='no' />
-            <param name='toolbar' value='yes' />
-
-            <param name='animate_transition' value='yes' />
-            <param name='display_static_image' value='yes' />
-            <param name='display_spinner' value='yes' />
-            <param name='display_overlay' value='yes' />
-            <param name='display_count' value='yes' />
-
-            <param name='static_image' 
-                  value='https://public.tableau.com/static/images/Te/Telecommunications_2/Dashboard/1.png' />
-          </object>
-        </div>
-
-        <script type='text/javascript'>
-          var divElement = document.getElementById('vizTelecom');
-          var vizElement = divElement.getElementsByTagName('object')[0];
-          var scriptElement = document.createElement('script');
-          scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
-          vizElement.parentNode.insertBefore(scriptElement, vizElement);
-        </script>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ========================================================= -->
-  <!-- Modal -->
-  <!-- ========================================================= -->
-  <div id="eventModalOverlay" class="modal-overlay hidden">
-    <div class="modal">
-      <header class="modal-header">
-        <h2>Create New Event</h2>
-        <button id="closeEventModal" class="icon-btn">✕</button>
-      </header>
-
-      <form id="eventForm" class="modal-body">
-
-        <label class="field">
-          <span class="field-label">Title</span>
-          <input id="eventTitle" type="text" placeholder="Event title..." />
-        </label>
-
-        <label class="field">
-          <span class="field-label">Date</span>
-          <input id="eventDate" type="date" />
-        </label>
-
-        <label class="field">
-          <span class="field-label">From</span>
-          <input id="eventStart" type="time" />
-        </label>
-
-        <label class="field">
-          <span class="field-label">To</span>
-          <input id="eventEnd" type="time" />
-        </label>
-
-        <label class="field">
-          <span class="field-label">Location</span>
-          <input id="eventLocation" type="text" />
-        </label>
-
-        <label class="field">
-          <span class="field-label">Tags</span>
-          <select id="eventCal">
-            <option>Academic Calendar</option>
-            <option>Closure</option>
-            <option>Sports</option>
-            <option>Weather</option>
-          </select>
-        </label>
-
-        <div class="modal-footer">
-          <button type="submit" class="primary-btn">Submit</button>
-        </div>
-
-      </form>
     </div>
-  </div>
 
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
