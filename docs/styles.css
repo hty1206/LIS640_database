@@ -99,9 +99,15 @@ body {
   color: var(--muted);
 }
 
-.weather-source-note a {
+/* Weather source link - force same color in all states */
+.weather-source-note a,
+.weather-source-note a:visited {
+  color: rgb(107, 160, 235) !important;
   text-decoration: underline;
-  color: rgb(107, 160, 235);
+}
+
+.weather-source-note a:hover {
+  color: #c7d8f5 !important;
 }
 
 /* ===== Calendar Layout ===== */
