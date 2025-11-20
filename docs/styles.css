@@ -313,3 +313,24 @@ select:hover {
 .tag-holiday {
   border-left: 2px solid var(--accent);
 }
+
+/* Tooltip: show full event title on hover */
+.event-pill {
+  position: relative;
+}
+
+.event-pill:hover::after {
+  content: attr(data-full-title);   /* show full title */
+  position: absolute;
+  left: 0;
+  top: 105%;
+  white-space: nowrap;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 2000;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
