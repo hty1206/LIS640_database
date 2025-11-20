@@ -216,7 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const li = document.createElement("li");
           li.textContent = ev.title;
           li.classList.add("event-pill");
-          li.setAttribute("data-full-title", ev.title);   // ← add tooltip data
           if (ev.tag) {
             li.classList.add(
               "tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase()
