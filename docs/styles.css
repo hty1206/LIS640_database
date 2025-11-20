@@ -9,6 +9,7 @@
   --border:rgba(255,255,255,0.14);
   --ring:rgba(62,162,255,0.25);
   --card:rgba(255,255,255,0.06);
+  --date-size:14px;
 }
 
 html[data-theme="light"] {
@@ -32,6 +33,10 @@ body {
   color:var(--text);
   font-family: ui-sans-serif, system-ui;
 }
+
+/* ===== Text helpers ===== */
+.muted { color:var(--muted); }
+.small { font-size:13px; }
 
 /* ===== Navbar ===== */
 .navbar {
@@ -63,6 +68,11 @@ body {
 
 .navbar a:hover {
   border:1px solid var(--accent);
+}
+
+/* Theme toggle button */
+.theme-btn {
+  min-width:64px;
 }
 
 /* ===== Container ===== */
@@ -218,10 +228,26 @@ body {
   align-items:center;
 }
 
+/* Icon-close buttons */
+.icon-btn {
+  background:transparent;
+  border:none;
+  color:var(--text);
+  cursor:pointer;
+  font-size:18px;
+  padding:4px;
+}
+
 .field {
   display:flex;
   flex-direction:column;
   margin-bottom:12px;
+}
+
+.field-label {
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:4px;
 }
 
 .primary-btn {
@@ -233,10 +259,34 @@ body {
   border-radius:8px;
 }
 
+/* Extra style for the detail modal */
+.modal-detail {
+  width: 420px;
+  max-width: 90vw;
+}
+
+/* Rows inside the detail modal */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.detail-row .field-label {
+  font-weight: 600;
+  color: var(--muted);
+}
+
 /* ===== Tableau Viewer ===== */
 #view-tableau .tableauPlaceholder {
   display:block;
   margin:1.5rem auto;
+}
+
+.tableau-frame {
+  margin-top:16px;
 }
 
 /* ===== Control Bar ===== */
@@ -301,6 +351,7 @@ select:hover {
 
 /* Event pill style + tooltip anchor */
 .event-pill {
+  position: relative;
   padding: 1px 4px;
   border-radius: 6px;
   background: rgba(255,255,255,0.08);
@@ -309,7 +360,31 @@ select:hover {
   text-overflow: ellipsis;
 }
 
+/* Tooltip on hover with full title */
+.event-pill:hover::after {
+  content: attr(data-full-title);
+  position: absolute;
+  left: 0;
+  top: 105%;
+  white-space: nowrap;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 2000;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
 /* Holiday special color */
 .tag-holiday {
   border-left: 2px solid var(--accent);
+}
+
+/* Footer under calendar */
+.foot {
+  font-size:13px;
+  color:var(--muted);
+  margin-top:8px;
 }

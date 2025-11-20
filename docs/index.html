@@ -169,7 +169,7 @@
     </main>
 
     <!-- ========================================================= -->
-    <!-- Modal -->
+    <!-- Modal: Create New Event -->
     <!-- ========================================================= -->
     <div id="eventModalOverlay" class="modal-overlay hidden">
       <div class="modal">
@@ -218,8 +218,41 @@
           <div class="modal-footer">
             <button type="submit" class="primary-btn">Submit</button>
           </div>
-
         </form>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- Modal: Event Detail (for clicking an event pill) -->
+    <!-- ========================================================= -->
+    <div id="eventDetailOverlay" class="modal-overlay hidden">
+      <div class="modal modal-detail">
+        <header class="modal-header">
+          <h2 id="detailTitle">Event title</h2>
+          <button id="closeDetailModal" class="icon-btn">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="detail-row">
+            <span class="field-label">Date</span>
+            <span id="detailDate"></span>
+          </p>
+
+          <p class="detail-row">
+            <span class="field-label">Tag</span>
+            <span id="detailTag"></span>
+          </p>
+
+          <p class="detail-row" id="detailTimeRow">
+            <span class="field-label">Time</span>
+            <span id="detailTime"></span>
+          </p>
+
+          <p class="detail-row" id="detailLocationRow">
+            <span class="field-label">Location</span>
+            <span id="detailLocation"></span>
+          </p>
+        </div>
       </div>
     </div>
 

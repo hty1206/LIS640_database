@@ -1,85 +1,9 @@
-// app.js - Calendar + Tableau + US Holidays (fetch holidays.json)
-
 document.addEventListener("DOMContentLoaded", () => {
-  /* ==========================
-   * NAV: switch Calendar / Tableau
-   * ========================== */
+  // ===== Basic DOM references =====
   const views = document.querySelectorAll(".view");
-  const calendarView = document.getElementById("view-calendar");
-  const tableauView = document.getElementById("view-tableau");
-  const navLinks = document.querySelectorAll("a[data-link]");
+  const navLinks = document.querySelectorAll("[data-link]");
+  const themeToggle = document.getElementById("themeToggle");
 
-  function showView(key) {
-    views.forEach(v => v.classList.add("hidden"));
-    if (key === "tableau") {
-      tableauView.classList.remove("hidden");
-    } else {
-      calendarView.classList.remove("hidden");
-    }
-  }
-
-  navLinks.forEach(link => {
-    link.addEventListener("click", e => {
-      e.preventDefault();
-      const target = link.getAttribute("href").slice(1); // "calendar" or "tableau"
-      showView(target);
-      window.location.hash = target;
-    });
-  });
-
-  const initialHash = window.location.hash.replace("#", "");
-  if (initialHash === "tableau") {
-    showView("tableau");
-  } else {
-    showView("calendar");
-  }
-
-  /* ==========================
-   * Theme toggle (Dark / Light)
-   * ========================== */
-  const themeToggleBtn = document.getElementById("themeToggle");
-  const rootEl = document.documentElement;
-
-  function applyTheme(theme) {
-    if (theme === "light") {
-      rootEl.setAttribute("data-theme", "light");
-      themeToggleBtn.textContent = "Light";
-    } else {
-      rootEl.removeAttribute("data-theme");
-      themeToggleBtn.textContent = "Dark";
-    }
-    localStorage.setItem("theme", theme);
-  }
-
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  applyTheme(savedTheme);
-
-  themeToggleBtn.addEventListener("click", () => {
-    const currentTheme =
-      rootEl.getAttribute("data-theme") === "light" ? "light" : "dark";
-    applyTheme(currentTheme === "light" ? "dark" : "light");
-  });
-
-  /* ==========================
-   * Date font size control
-   * ========================== */
-  const dateSizeRange = document.getElementById("dateSizeRange");
-  const dateSizeVal = document.getElementById("dateSizeVal");
-
-  function setDateSize(px) {
-    dateSizeVal.textContent = px;
-    document.documentElement.style.setProperty("--date-size", px + "px");
-  }
-
-  setDateSize(dateSizeRange.value);
-
-  dateSizeRange.addEventListener("input", () => {
-    setDateSize(dateSizeRange.value);
-  });
-
-  /* ==========================
-   * Calendar DOM elements
-   * ========================== */
   const titleText = document.getElementById("titleText");
   const weekdaysEl = document.getElementById("weekdays");
   const gridEl = document.getElementById("grid");
@@ -91,338 +15,456 @@ document.addEventListener("DOMContentLoaded", () => {
   const monthSelect = document.getElementById("monthSelect");
   const yearSelect = document.getElementById("yearSelect");
 
-  const tagCheckboxes = document.querySelectorAll("input[data-tag-filter]");
+  const dateSizeRange = document.getElementById("dateSizeRange");
+  const dateSizeVal = document.getElementById("dateSizeVal");
 
-  // Modal & form elements
-  const overlay = document.getElementById("eventModalOverlay");
   const newEventBtn = document.getElementById("newEventBtn");
-  const closeEventModal = document.getElementById("closeEventModal");
-  const eventForm = document.getElementById("eventForm");
 
-  const titleInput = document.getElementById("eventTitle");
-  const dateInput = document.getElementById("eventDate");
-  const startInput = document.getElementById("eventStart");
-  const endInput = document.getElementById("eventEnd");
-  const locationInput = document.getElementById("eventLocation");
+  // Create Event modal
+  const eventModalOverlay = document.getElementById("eventModalOverlay");
+  const closeEventModalBtn = document.getElementById("closeEventModal");
+  const eventForm = document.getElementById("eventForm");
+  const eventTitleInput = document.getElementById("eventTitle");
+  const eventDateInput = document.getElementById("eventDate");
+  const eventStartInput = document.getElementById("eventStart");
+  const eventEndInput = document.getElementById("eventEnd");
+  const eventLocationInput = document.getElementById("eventLocation");
   const tagSelect = document.getElementById("eventCal");
 
-  // Weekday header
-  const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  weekdaysEl.innerHTML = "";
-  weekdayNames.forEach(name => {
-    const div = document.createElement("div");
-    div.textContent = name;
-    weekdaysEl.appendChild(div);
+  // Event detail modal elements
+  const detailOverlay = document.getElementById("eventDetailOverlay");
+  const detailTitleEl = document.getElementById("detailTitle");
+  const detailDateEl = document.getElementById("detailDate");
+  const detailTagEl = document.getElementById("detailTag");
+  const detailTimeEl = document.getElementById("detailTime");
+  const detailLocationEl = document.getElementById("detailLocation");
+  const detailTimeRow = document.getElementById("detailTimeRow");
+  const detailLocationRow = document.getElementById("detailLocationRow");
+  const closeDetailModalBtn = document.getElementById("closeDetailModal");
+
+  // Tag filters (sidebar)
+  const tagFilterInputs = document.querySelectorAll("[data-tag-filter]");
+
+  // ===== State =====
+  const today = new Date();
+  let currentYear = today.getFullYear();
+  let currentMonth = today.getMonth(); // 0-based
+  let selectedDate = formatDate(today);
+
+  let holidays = [];   // from holidays.json
+  let userEvents = []; // created via modal
+
+  // Selected tag filters
+  const selectedTags = new Set(
+    Array.from(tagFilterInputs)
+      .filter((el) => el.checked)
+      .map((el) => el.dataset.tagFilter)
+  );
+
+  // ===== Utility: date helpers =====
+  function pad(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  function formatDate(dateObj) {
+    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(
+      dateObj.getDate()
+    )}`;
+  }
+
+  // ===== View routing (Calendar <-> Tableau) =====
+  function showView(name) {
+    views.forEach((v) => {
+      if (v.id === `view-${name}`) {
+        v.classList.remove("hidden");
+      } else {
+        v.classList.add("hidden");
+      }
+    });
+  }
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = link.getAttribute("href").replace("#", "");
+      showView(target);
+    });
   });
 
-  // Month names (used by header and selects)
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-  ];
+  // Default: calendar
+  showView("calendar");
 
-  // Current view month (always set to day = 1)
-  let current = new Date();
-  current = new Date(current.getFullYear(), current.getMonth(), 1);
-
-  /* ==========================
-   * Event data: from holidays.json + user-created events
-   * ========================== */
-
-  // Events loaded from holidays.json (federal holidays)
-  let baseEvents = [];
-
-  // Events created by the user via the form
-  let userEvents = [];
-
-  function getAllEvents() {
-    return [...baseEvents, ...userEvents];
+  // ===== Theme toggle =====
+  function applyTheme(theme) {
+    if (theme === "light") {
+      document.documentElement.setAttribute("data-theme", "light");
+      themeToggle.textContent = "Light";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      themeToggle.textContent = "Dark";
+    }
   }
 
-  function getActiveTags() {
-    return [...tagCheckboxes]
-      .filter(cb => cb.checked)
-      .map(cb => cb.dataset.tagFilter);
+  const storedTheme = localStorage.getItem("dtp-theme");
+  if (storedTheme) {
+    applyTheme(storedTheme);
+  } else {
+    applyTheme("dark");
   }
 
-  /* ==========================
-   * Calendar rendering
-   * ========================== */
-  function formatDateYMD(y, mIndex, d) {
-    const mm = String(mIndex + 1).padStart(2, "0");
-    const dd = String(d).padStart(2, "0");
-    return `${y}-${mm}-${dd}`;
+  themeToggle.addEventListener("click", () => {
+    const isLight =
+      document.documentElement.getAttribute("data-theme") === "light";
+    const newTheme = isLight ? "dark" : "light";
+    applyTheme(newTheme);
+    localStorage.setItem("dtp-theme", newTheme);
+  });
+
+  // ===== Date size slider =====
+  function updateDateSize(val) {
+    dateSizeVal.textContent = val;
+    document.documentElement.style.setProperty("--date-size", `${val}px`);
+  }
+
+  updateDateSize(dateSizeRange.value);
+
+  dateSizeRange.addEventListener("input", (e) => {
+    updateDateSize(e.target.value);
+  });
+
+  // ===== Weekdays header =====
+  function renderWeekdays() {
+    const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    weekdaysEl.innerHTML = "";
+    names.forEach((name) => {
+      const div = document.createElement("div");
+      div.className = "weekday";
+      div.textContent = name;
+      weekdaysEl.appendChild(div);
+    });
+  }
+
+  // ===== Month / Year selects =====
+  function populateMonthYearSelects() {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    monthSelect.innerHTML = "";
+    monthNames.forEach((name, idx) => {
+      const opt = document.createElement("option");
+      opt.value = idx;
+      opt.textContent = name;
+      if (idx === currentMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
+    });
+
+    // 2022–2028 cover your holidays.json
+    yearSelect.innerHTML = "";
+    for (let y = 2022; y <= 2028; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+  }
+
+  // ===== Event Detail Modal =====
+  function openEventDetailModal(ev, dateStr) {
+    detailTitleEl.textContent = ev.title || "(No title)";
+    detailDateEl.textContent = dateStr || ev.date || "—";
+    detailTagEl.textContent = ev.tag || "—";
+
+    // Time
+    if (ev.start || ev.end) {
+      const start = ev.start || "";
+      const end = ev.end || "";
+      detailTimeEl.textContent =
+        start && end ? `${start} – ${end}` : start || end;
+      detailTimeRow.style.display = "";
+    } else {
+      detailTimeRow.style.display = "none";
+      detailTimeEl.textContent = "";
+    }
+
+    // Location
+    if (ev.location) {
+      detailLocationEl.textContent = ev.location;
+      detailLocationRow.style.display = "";
+    } else {
+      detailLocationRow.style.display = "none";
+      detailLocationEl.textContent = "";
+    }
+
+    detailOverlay.classList.remove("hidden");
+  }
+
+  function closeEventDetailModal() {
+    detailOverlay.classList.add("hidden");
+  }
+
+  closeDetailModalBtn.addEventListener("click", closeEventDetailModal);
+
+  detailOverlay.addEventListener("click", (e) => {
+    if (e.target === detailOverlay) {
+      closeEventDetailModal();
+    }
+  });
+
+  // ===== Create Event Modal =====
+  function openEventModal() {
+    // 預設 date = 現在選到的那天（或今天）
+    eventDateInput.value = selectedDate || formatDate(today);
+    eventTitleInput.value = "";
+    eventStartInput.value = "";
+    eventEndInput.value = "";
+    eventLocationInput.value = "";
+    tagSelect.value = "Academic Calendar";
+    eventModalOverlay.classList.remove("hidden");
+  }
+
+  function closeEventModal() {
+    eventModalOverlay.classList.add("hidden");
+  }
+
+  newEventBtn.addEventListener("click", openEventModal);
+  closeEventModalBtn.addEventListener("click", closeEventModal);
+
+  eventModalOverlay.addEventListener("click", (e) => {
+    if (e.target === eventModalOverlay) {
+      closeEventModal();
+    }
+  });
+
+  // Submit new event
+  eventForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const title = eventTitleInput.value.trim();
+    const date = eventDateInput.value;
+    const start = eventStartInput.value;
+    const end = eventEndInput.value;
+    const location = eventLocationInput.value.trim();
+    const tag = tagSelect.value;
+
+    if (!title || !date) {
+      alert("Title and Date are required.");
+      return;
+    }
+
+    userEvents.push({
+      id: Date.now(),
+      title,
+      date,
+      start,
+      end,
+      location,
+      tag,
+    });
+
+    closeEventModal();
+    renderCalendarGrid();
+  });
+
+  // ===== Tag filter behavior =====
+  tagFilterInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      const tag = input.dataset.tagFilter;
+      if (input.checked) {
+        selectedTags.add(tag);
+      } else {
+        selectedTags.delete(tag);
+      }
+      renderCalendarGrid();
+    });
+  });
+
+  // ===== Calendar rendering =====
+  function updateTitleAndPicked() {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    titleText.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    pickedEl.textContent = selectedDate || "—";
+  }
+
+  function getEventsForDate(dateStr) {
+    const allEvents = [...holidays, ...userEvents];
+    return allEvents.filter(
+      (ev) => ev.date === dateStr && selectedTags.has(ev.tag)
+    );
   }
 
   function renderCalendarGrid() {
     gridEl.innerHTML = "";
 
-    const year = current.getFullYear();
-    const month = current.getMonth();
-    const firstOfMonth = new Date(year, month, 1);
-    const startWeekday = firstOfMonth.getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date();
+    updateTitleAndPicked();
 
-    titleText.textContent = `${monthNames[month]} ${year}`;
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const startWeekday = firstDay.getDay(); // 0–6
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    if (monthSelect) monthSelect.value = String(month);
-    if (yearSelect) yearSelect.value = String(year);
+    const totalCells = startWeekday + daysInMonth;
 
-    const activeTags = getActiveTags();
-    const allEvents = getAllEvents();
-
-    // Leading empty cells before day 1
-    for (let i = 0; i < startWeekday; i++) {
-      gridEl.appendChild(document.createElement("div"));
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = formatDateYMD(year, month, d);
-      const cellDate = new Date(year, month, d);
-
+    for (let cellIndex = 0; cellIndex < totalCells; cellIndex++) {
       const cell = document.createElement("div");
-      cell.classList.add("cell");
+      cell.className = "cell";
 
-      const dateNum = document.createElement("div");
-      dateNum.classList.add("date-num");
-      dateNum.textContent = d;
-      cell.appendChild(dateNum);
-
-      // Events for this day (with tag filtering)
-      const eventsForDay = allEvents.filter(ev => {
-        if (ev.date !== dateStr) return false;
-        if (!ev.tag) return true;
-        return activeTags.includes(ev.tag);
-      });
-
-      if (eventsForDay.length > 0) {
-        cell.classList.add("has-event");
-
-        const list = document.createElement("ul");
-        list.classList.add("event-list");
-
-        eventsForDay.forEach(ev => {
-          const li = document.createElement("li");
-          li.textContent = ev.title;
-          li.classList.add("event-pill");
-          if (ev.tag) {
-            li.classList.add(
-              "tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase()
-            );
-          }
-          list.appendChild(li);
-        });
-
-        cell.appendChild(list);
+      if (cellIndex < startWeekday) {
+        // Empty padding cell
+        cell.classList.add("empty");
+        gridEl.appendChild(cell);
+        continue;
       }
 
-      // Mark today
+      const dateNumber = cellIndex - startWeekday + 1;
+      const dateObj = new Date(currentYear, currentMonth, dateNumber);
+      const dateStr = formatDate(dateObj);
+
+      const dateNumEl = document.createElement("div");
+      dateNumEl.className = "date-num";
+      dateNumEl.textContent = dateNumber;
+      cell.appendChild(dateNumEl);
+
+      const list = document.createElement("ul");
+      list.className = "event-list";
+      cell.appendChild(list);
+
+      // Today highlight
       if (
-        cellDate.getFullYear() === today.getFullYear() &&
-        cellDate.getMonth() === today.getMonth() &&
-        cellDate.getDate() === today.getDate()
+        dateObj.getFullYear() === today.getFullYear() &&
+        dateObj.getMonth() === today.getMonth() &&
+        dateObj.getDate() === today.getDate()
       ) {
         cell.classList.add("today");
       }
 
-      // Click cell: select date and update footer
-      cell.addEventListener("click", () => {
-        document
-          .querySelectorAll(".cell.selected")
-          .forEach(c => c.classList.remove("selected"));
+      // Selected date outline
+      if (dateStr === selectedDate) {
         cell.classList.add("selected");
-        pickedEl.textContent = dateStr;
+      }
+
+      // Events for this day (from holidays + user events + tag filters)
+      const eventsForDay = getEventsForDate(dateStr);
+
+      eventsForDay.forEach((ev) => {
+        const li = document.createElement("li");
+        li.textContent = ev.title;
+        li.classList.add("event-pill");
+
+        // CSS class for tag color
+        if (ev.tag) {
+          li.classList.add(
+            "tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase()
+          );
+        }
+
+        // Tooltip: full title on hover
+        li.setAttribute("data-full-title", ev.title || "");
+
+        // When clicking the pill, open detail modal
+        li.addEventListener("click", (clickEvt) => {
+          clickEvt.stopPropagation(); // avoid triggering cell click
+          openEventDetailModal(ev, dateStr);
+        });
+
+        list.appendChild(li);
+      });
+
+      // Clicking the cell changes selectedDate
+      cell.addEventListener("click", () => {
+        selectedDate = dateStr;
+        pickedEl.textContent = selectedDate;
+
+        const prevSelected = gridEl.querySelector(".cell.selected");
+        if (prevSelected) {
+          prevSelected.classList.remove("selected");
+        }
+        cell.classList.add("selected");
       });
 
       gridEl.appendChild(cell);
     }
-
-    // If current view month is this month, show today's date in the footer
-    if (
-      today.getFullYear() === year &&
-      today.getMonth() === month
-    ) {
-      pickedEl.textContent = formatDateYMD(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate()
-      );
-    }
   }
 
-  /* ==========================
-   * Month / Year select initialization
-   * ========================== */
-  function initMonthYearSelectors() {
-    if (!monthSelect || !yearSelect) return;
-
-    monthSelect.innerHTML = "";
-    monthNames.forEach((name, idx) => {
-      const opt = document.createElement("option");
-      opt.value = String(idx);
-      opt.textContent = name;
-      monthSelect.appendChild(opt);
-    });
-
-    // Year range (match years covered in holidays.json)
-    yearSelect.innerHTML = "";
-    for (let y = 2022; y <= 2028; y++) {
-      const opt = document.createElement("option");
-      opt.value = String(y);
-      opt.textContent = String(y);
-      yearSelect.appendChild(opt);
-    }
-
-    monthSelect.value = String(current.getMonth());
-    yearSelect.value = String(current.getFullYear());
-  }
-
-  /* ==========================
-   * Navigation: previous / next / today
-   * ========================== */
+  // ===== Navigation: Today / Prev / Next / dropdowns =====
   todayBtn.addEventListener("click", () => {
-    const now = new Date();
-    current = new Date(now.getFullYear(), now.getMonth(), 1);
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+    selectedDate = formatDate(today);
+    populateMonthYearSelects();
     renderCalendarGrid();
   });
 
   prevBtn.addEventListener("click", () => {
-    current = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+    if (currentMonth === 0) {
+      currentMonth = 11;
+      currentYear -= 1;
+    } else {
+      currentMonth -= 1;
+    }
+    populateMonthYearSelects();
     renderCalendarGrid();
   });
 
   nextBtn.addEventListener("click", () => {
-    current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+    if (currentMonth === 11) {
+      currentMonth = 0;
+      currentYear += 1;
+    } else {
+      currentMonth += 1;
+    }
+    populateMonthYearSelects();
     renderCalendarGrid();
   });
 
   monthSelect.addEventListener("change", () => {
-    const y = current.getFullYear();
-    const m = parseInt(monthSelect.value, 10);
-    current = new Date(y, m, 1);
+    currentMonth = Number(monthSelect.value);
     renderCalendarGrid();
   });
 
   yearSelect.addEventListener("change", () => {
-    const y = parseInt(yearSelect.value, 10);
-    const m = current.getMonth();
-    current = new Date(y, m, 1);
+    currentYear = Number(yearSelect.value);
     renderCalendarGrid();
   });
 
-  /* ==========================
-   * Tag checkboxes -> re-render calendar
-   * ========================== */
-  tagCheckboxes.forEach(cb => {
-    cb.addEventListener("change", () => {
+  // ===== Holidays data (holidays.json) =====
+  fetch("holidays.json")
+    .then((res) => res.json())
+    .then((data) => {
+      holidays = data || [];
+      renderCalendarGrid();
+    })
+    .catch((err) => {
+      console.error("Failed to load holidays.json:", err);
       renderCalendarGrid();
     });
-  });
 
-  /* ==========================
-   * Modal: create new event
-   * ========================== */
-  function openEventModal(defaultDate) {
-    if (defaultDate) {
-      dateInput.value = defaultDate;
-    } else {
-      const pickedText = pickedEl.textContent;
-      if (pickedText && pickedText !== "—") {
-        dateInput.value = pickedText;
-      } else {
-        const now = new Date();
-        dateInput.value = formatDateYMD(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate()
-        );
-      }
-    }
-    overlay.classList.remove("hidden");
-    titleInput.focus();
-  }
-
-  function closeEventModalFn() {
-    overlay.classList.add("hidden");
-  }
-
-  newEventBtn.addEventListener("click", () => {
-    openEventModal();
-  });
-
-  closeEventModal.addEventListener("click", () => {
-    closeEventModalFn();
-  });
-
-  overlay.addEventListener("click", e => {
-    if (e.target === overlay) {
-      closeEventModalFn();
-    }
-  });
-
-  eventForm.addEventListener("submit", e => {
-    e.preventDefault();
-
-    if (!titleInput.value || !dateInput.value) {
-      alert("Please enter at least Title and Date.");
-      return;
-    }
-
-    userEvents.push({
-      date: dateInput.value,
-      title: titleInput.value,
-      start: startInput.value || null,
-      end: endInput.value || null,
-      location: locationInput.value || null,
-      tag: tagSelect.value || null
-    });
-
-    eventForm.reset();
-    closeEventModalFn();
-    renderCalendarGrid();
-  });
-
-  /* ==========================
-   * Load Holiday events from holidays.json
-   * ========================== */
-  function loadHolidays() {
-    fetch("holidays.json")
-      .then(res => {
-        if (!res.ok) {
-          throw new Error("Failed to load holidays.json: " + res.status);
-        }
-        return res.json();
-      })
-      .then(data => {
-        // holidays.json should be an array of objects with date / title / tag
-        if (Array.isArray(data)) {
-          baseEvents = data;
-        } else {
-          baseEvents = [];
-        }
-        renderCalendarGrid();
-      })
-      .catch(err => {
-        console.error("Error loading holidays.json:", err);
-        baseEvents = [];
-        renderCalendarGrid();
-      });
-  }
-
-  /* ==========================
-   * Initialization
-   * ========================== */
-  initMonthYearSelectors();
-  loadHolidays(); // After holidays are loaded, render calendar including Holiday events
+  // ===== Initial setup =====
+  renderWeekdays();
+  populateMonthYearSelects();
+  renderCalendarGrid();
 });
