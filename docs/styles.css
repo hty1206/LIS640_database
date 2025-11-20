@@ -92,6 +92,18 @@ body {
   padding:16px;
 }
 
+.weather-source-note {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.weather-source-note a {
+  text-decoration: underline;
+  color: rgb(107, 160, 235);
+}
+
 /* ===== Calendar Layout ===== */
 .calendar-layout {
   display:grid;
