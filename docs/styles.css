@@ -1,4 +1,4 @@
-/* ===== Theme variables ===== */
+/* ===== Theme Variables ===== */
 :root {
   --bg:#0a1124;
   --surface:#0f1b39;
@@ -23,37 +23,58 @@ html[data-theme="light"] {
   --card:#ffffff;
 }
 
-/* General */
+/* ===== Global ===== */
 * { box-sizing:border-box; }
 html, body { height:100%; margin:0; }
+
 body {
   background:var(--bg);
   color:var(--text);
   font-family: ui-sans-serif, system-ui;
 }
 
-/* Navbar */
+/* ===== Navbar ===== */
 .navbar {
-  display:flex; justify-content:space-between; align-items:center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   padding:10px 16px;
   border-bottom:1px solid var(--border);
   background:var(--surface);
-  position:sticky; top:0; z-index:10;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
-.navbar ul { display:flex; gap:12px; margin:0; padding:0; list-style:none; }
+
+.navbar ul {
+  display:flex;
+  gap:12px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
 .navbar a {
   padding:8px 10px;
   color:var(--text);
   text-decoration:none;
   border-radius:8px;
 }
-.navbar a:hover { border:1px solid var(--accent); }
 
-/* Container */
-.container { max-width:1400px; margin:20px auto; padding:0 16px; }
+.navbar a:hover {
+  border:1px solid var(--accent);
+}
+
+/* ===== Container ===== */
+.container {
+  max-width:1400px;
+  margin:20px auto;
+  padding:0 16px;
+}
+
 .view.hidden { display:none; }
 
-/* Panel */
+/* ===== Panel ===== */
 .panel {
   background:var(--card);
   border:1px solid var(--border);
@@ -61,7 +82,7 @@ body {
   padding:16px;
 }
 
-/* Calendar Layout */
+/* ===== Calendar Layout ===== */
 .calendar-layout {
   display:grid;
   grid-template-columns:4fr 1fr;
@@ -69,7 +90,7 @@ body {
   margin-top:20px;
 }
 
-/* Card */
+/* ===== Card ===== */
 .card {
   background:var(--card);
   border:1px solid var(--border);
@@ -77,28 +98,46 @@ body {
   padding:20px;
 }
 
-/* Calendar Styles */
+/* ===== Calendar Header ===== */
 .header {
-  display:grid; grid-template-columns:1fr 1fr auto;
-  align-items:center; gap:10px;
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  align-items:center;
+  gap:10px;
   margin-bottom:12px;
 }
 
-.calendar { display:grid; grid-template-rows:auto 1fr; gap:8px; }
+.calendar {
+  display:grid;
+  grid-template-rows:auto 1fr;
+  gap:8px;
+}
 
+/* ===== Weekdays + Grid ===== */
 .weekdays, .grid {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:6px;
 }
 
+/* ===== Calendar Cell ===== */
 .cell {
-  aspect-ratio:1/1;
-  border-radius:14px;
-  padding:10px;
+  height: 120px;         /* Fixed height to prevent layout shifts */
+  border-radius: 14px;
+  padding: 6px;
   border:1px solid var(--border);
-  background:rgba(255,255,255,0.03);
-  font-size: var(--date-size); 
+  background: rgba(255,255,255,0.03);
+  font-size: var(--date-size);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;       /* Prevent content from stretching the cell */
+}
+
+.date-num {
+  font-weight:600;
+  margin-bottom:4px;
 }
 
 .cell:hover {
@@ -106,26 +145,39 @@ body {
   border-color:var(--accent);
 }
 
+/* Highlight today's date */
 .today {
   border-color:var(--accent);
   background:rgba(62,162,255,0.15);
 }
 
+/* Selected cell outline */
 .selected {
   border-color:var(--selected);
   box-shadow:0 0 0 3px var(--ring);
 }
 
-/* Tags Sidebar */
+/* ===== Tags Sidebar ===== */
 .tag-sidebar h3 {
   margin:0 0 12px 0;
   font-size:16px;
 }
 
-.tag-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
-.tag-item label { display:flex; gap:8px; }
+.tag-list {
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
 
-/* Create Event Button */
+.tag-item label {
+  display:flex;
+  gap:8px;
+}
+
+/* ===== Create Event Button ===== */
 .add-event-btn {
   background:var(--accent);
   color:white;
@@ -134,18 +186,23 @@ body {
   border-radius:8px;
   cursor:pointer;
 }
+
 .add-event-btn:hover {
   background:#67b7ff;
   box-shadow:0 0 0 4px var(--ring);
 }
 
-/* Modal */
+/* ===== Modal ===== */
 .modal-overlay {
-  position:fixed; inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,0.55);
-  display:flex; justify-content:center; align-items:center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
   z-index:200;
 }
+
 .modal-overlay.hidden { display:none; }
 
 .modal {
@@ -156,11 +213,15 @@ body {
 }
 
 .modal-header {
-  display:flex; justify-content:space-between; align-items:center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .field {
-  display:flex; flex-direction:column; margin-bottom:12px;
+  display:flex;
+  flex-direction:column;
+  margin-bottom:12px;
 }
 
 .primary-btn {
@@ -172,35 +233,34 @@ body {
   border-radius:8px;
 }
 
+/* ===== Tableau Viewer ===== */
 #view-tableau .tableauPlaceholder {
-  display: block;
-  margin: 1.5rem auto; 
+  display:block;
+  margin:1.5rem auto;
 }
 
-/* Control Bar */
+/* ===== Control Bar ===== */
 .control-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .date-size-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-/* ----------------------------------------
-   Today / Prev / Next / Dark button
----------------------------------------- */
+/* ===== Buttons (Today/Prev/Next/Theme) ===== */
 button {
   background: rgb(248, 247, 247);
   color: black;
   border: 1px solid var(--border);
   padding: 6px 10px;
   border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
+  cursor:pointer;
+  font-size:14px;
 }
 
 button:hover {
@@ -208,9 +268,7 @@ button:hover {
   background: rgba(62,162,255,0.15);
 }
 
-/* ----------------------------------------
-   Select dropdown menu
----------------------------------------- */
+/* ===== Select Dropdowns ===== */
 select {
   background: rgb(248, 247, 247);
   color: black;
@@ -221,5 +279,37 @@ select {
 }
 
 select:hover {
-  border-color: var(--accent);
+  border-color:var(--accent);
+}
+
+/* ===== Event List Inside Cell ===== */
+.event-list {
+  list-style: none;
+  margin:4px 0 0;
+  padding:0;
+
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+
+  font-size:10px;
+  line-height:1.2;
+
+  overflow-y:auto;       /* Allow scrolling if too many events */
+  max-height:70px;       /* Prevent events from overflowing the cell */
+}
+
+/* Event pill style */
+.event-pill {
+  padding:1px 4px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.08);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Holiday special color */
+.tag-holiday {
+  border-left: 2px solid var(--accent);
 }
