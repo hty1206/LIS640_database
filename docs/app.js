@@ -51,8 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentMonth = today.getMonth(); // 0-based
   let selectedDate = formatDate(today);
 
-  let holidays = [];   // from holidays.json
-  let userEvents = []; // created via modal
+  let holidays = [];      // from holidays.json
+  let userEvents = [];    // created via modal
+  let weatherEvents = []; // from ACIS weather APIs
 
   // Selected tag filters
   const selectedTags = new Set(
@@ -170,9 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
       monthSelect.appendChild(opt);
     });
 
-    // 2022–2028 cover your holidays.json
+    // 2020–2028 cover your holidays.json and weather range
     yearSelect.innerHTML = "";
-    for (let y = 2022; y <= 2028; y++) {
+    for (let y = 2020; y <= 2028; y++) {
       const opt = document.createElement("option");
       opt.value = y;
       opt.textContent = y;
@@ -225,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Create Event Modal =====
   function openEventModal() {
-    // 預設 date = 現在選到的那天（或今天）
+    // Default date = currently selected date (or today)
     eventDateInput.value = selectedDate || formatDate(today);
     eventTitleInput.value = "";
     eventStartInput.value = "";
@@ -312,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getEventsForDate(dateStr) {
-    const allEvents = [...holidays, ...userEvents];
+    const allEvents = [...holidays, ...userEvents, ...weatherEvents];
     return allEvents.filter(
       (ev) => ev.date === dateStr && selectedTags.has(ev.tag)
     );
@@ -367,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.add("selected");
       }
 
-      // Events for this day (from holidays + user events + tag filters)
+      // Events for this day (from holidays + user events + weather + tag filters)
       const eventsForDay = getEventsForDate(dateStr);
 
       eventsForDay.forEach((ev) => {
@@ -375,11 +376,35 @@ document.addEventListener("DOMContentLoaded", () => {
         li.textContent = ev.title;
         li.classList.add("event-pill");
 
-        // CSS class for tag color
+        // Base CSS class for tag color, e.g., tag="Holiday" -> .tag-holiday
         if (ev.tag) {
           li.classList.add(
             "tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase()
           );
+        }
+
+        // Temperature-based weather coloring
+        if (ev.tag === "Weather" && ev.avgt != null) {
+          const avg = parseFloat(ev.avgt);
+          if (!Number.isNaN(avg)) {
+            if (avg >= 80) {
+              // Hot day
+              li.classList.add("weather-hot");
+            } else if (avg <= 32) {
+              // Cold day
+              li.classList.add("weather-cold");
+            }
+          }
+        }
+
+        // Precipitation alert (heavy rain)
+        if (ev.tag === "Weather" && ev.pcpn != null) {
+          const rain = parseFloat(ev.pcpn);
+          if (!Number.isNaN(rain) && rain >= 0.5) {
+            // Add visual warning style and icon
+            li.classList.add("weather-rain-heavy");
+            li.textContent = "🌧️ " + ev.title;
+          }
         }
 
         // Tooltip: full title on hover
@@ -387,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // When clicking the pill, open detail modal
         li.addEventListener("click", (clickEvt) => {
-          clickEvt.stopPropagation(); // avoid triggering cell click
+          clickEvt.stopPropagation();
           openEventDetailModal(ev, dateStr);
         });
 
@@ -461,6 +486,112 @@ document.addEventListener("DOMContentLoaded", () => {
     .catch((err) => {
       console.error("Failed to load holidays.json:", err);
       renderCalendarGrid();
+    });
+
+  // ===== Weather data (ACIS APIs, from 2020) =====
+
+  // Temperature (average / max / min)
+  const WEATHER_URL =
+    "https://data.rcc-acis.org/StnData?sid=MSNthr&sdate=2020-01-01&edate=por&elems=avgt,maxt,mint&output=csv";
+
+  // Daily precipitation
+  const PRECIP_URL =
+    "https://data.rcc-acis.org/StnData?sid=MSNthr&sdate=2020-01-01&edate=por&elems=pcpn&output=csv";
+
+  // Parse temperature CSV: date,avgt,maxt,mint
+  function parseWeatherCsv(csvText) {
+    const lines = csvText.trim().split(/\r?\n/);
+    const events = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // Skip header line, e.g., "Madison Area"
+      if (!/^\d{4}-\d{2}-\d{2}/.test(line)) continue;
+
+      const cols = line.split(",");
+      if (cols.length < 4) continue;
+
+      const dateStr = cols[0]; // YYYY-MM-DD
+      const avgt = cols[1];
+      const maxt = cols[2];
+      const mint = cols[3];
+
+      // Keep only data from 2020-01-01 onward
+      if (dateStr < "2020-01-01") continue;
+
+      events.push({
+        date: dateStr,
+        title: `Avg ${avgt}°F (H ${maxt}° / L ${mint}°)`,
+        tag: "Weather",
+        location: "Madison Area",
+        avgt,
+        maxt,
+        mint,
+      });
+    }
+
+    return events;
+  }
+
+  // Parse precipitation CSV: date,pcpn
+  function parsePrecipCsv(csvText) {
+    const lines = csvText.trim().split(/\r?\n/);
+    const events = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // Skip header line, e.g., "Madison Area"
+      if (!/^\d{4}-\d{2}-\d{2}/.test(line)) continue;
+
+      const cols = line.split(",");
+      if (cols.length < 2) continue;
+
+      const dateStr = cols[0];
+      const pcpn = cols[1]; // daily precipitation (inches)
+
+      // Keep only data from 2020-01-01 onward
+      if (dateStr < "2020-01-01") continue;
+
+      events.push({
+        date: dateStr,
+        title: `Precip ${pcpn} in`,
+        tag: "Weather",
+        location: "Madison Area",
+        pcpn,
+      });
+    }
+
+    return events;
+  }
+
+  // Fetch temperature CSV
+  fetch(WEATHER_URL)
+    .then((res) => res.text())
+    .then((csv) => {
+      const tempEvents = parseWeatherCsv(csv);
+      weatherEvents = weatherEvents.concat(tempEvents);
+      console.log("✅ Temperature weather events loaded:", tempEvents.length);
+      renderCalendarGrid();
+    })
+    .catch((err) => {
+      console.error("❌ Failed to load temperature weather data:", err);
+    });
+
+  // Fetch precipitation CSV
+  fetch(PRECIP_URL)
+    .then((res) => res.text())
+    .then((csv) => {
+      const precipEvents = parsePrecipCsv(csv);
+      weatherEvents = weatherEvents.concat(precipEvents);
+      console.log("✅ Precipitation weather events loaded:", precipEvents.length);
+      renderCalendarGrid();
+    })
+    .catch((err) => {
+      console.error("❌ Failed to load precipitation weather data:", err);
     });
 
   // ===== Initial setup =====

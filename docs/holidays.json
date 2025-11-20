@@ -1,4 +1,22 @@
 [
+  { "date": "2020-01-01", "title": "New Year's Day", "tag": "Holiday" },
+  { "date": "2020-01-20", "title": "Martin Luther King Jr. Day", "tag": "Holiday" },
+  { "date": "2020-02-17", "title": "Washington's Birthday", "tag": "Holiday" },
+  { "date": "2020-05-25", "title": "Memorial Day", "tag": "Holiday" },
+  { "date": "2020-07-04", "title": "Independence Day", "tag": "Holiday" },
+  { "date": "2020-09-07", "title": "Labor Day", "tag": "Holiday" },
+  { "date": "2020-11-26", "title": "Thanksgiving Day", "tag": "Holiday" },
+  { "date": "2020-12-25", "title": "Christmas Day", "tag": "Holiday" },
+
+  { "date": "2021-01-01", "title": "New Year's Day", "tag": "Holiday" },
+  { "date": "2021-01-18", "title": "Martin Luther King Jr. Day", "tag": "Holiday" },
+  { "date": "2021-02-15", "title": "Washington's Birthday", "tag": "Holiday" },
+  { "date": "2021-05-31", "title": "Memorial Day", "tag": "Holiday" },
+  { "date": "2021-07-05", "title": "Independence Day (Observed)", "tag": "Holiday" },
+  { "date": "2021-09-06", "title": "Labor Day", "tag": "Holiday" },
+  { "date": "2021-11-25", "title": "Thanksgiving Day", "tag": "Holiday" },
+  { "date": "2021-12-25", "title": "Christmas Day", "tag": "Holiday" },
+
   { "date": "2022-01-01", "title": "New Year's Day", "tag": "Holiday" },
   { "date": "2022-01-17", "title": "Martin Luther King Jr. Day", "tag": "Holiday" },
   { "date": "2022-02-21", "title": "Washington's Birthday", "tag": "Holiday" },

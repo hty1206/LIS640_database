@@ -379,7 +379,49 @@ select:hover {
 
 /* Holiday special color */
 .tag-holiday {
-  border-left: 2px solid var(--accent);
+  border-left: 3px solid #ff9800;   /* orange */
+  background: rgba(255, 152, 0, 0.15);
+}
+
+/* Base color for Weather tag */
+.tag-weather {
+  border-left: 2px solid var(--muted);
+}
+
+/* Hot day (high average temperature) */
+.weather-hot {
+  background: rgba(255, 99, 71, 0.25);
+  border-left-color: #ff6347; /* tomato */
+}
+
+/* Cold day (low average temperature) */
+.weather-cold {
+  background: rgba(65, 105, 225, 0.25);
+  border-left-color: #4169e1; /* royalblue */
+}
+
+/* Base color for Weather tag */
+.tag-weather {
+  border-left: 2px solid var(--muted);
+}
+
+/* Hot day (high average temperature) */
+.weather-hot {
+  background: rgba(255, 99, 71, 0.25);
+  border-left-color: #ff6347; /* tomato */
+}
+
+/* Cold day (low average temperature) */
+.weather-cold {
+  background: rgba(65, 105, 225, 0.25);
+  border-left-color: #4169e1; /* royalblue */
+}
+
+/* Heavy rain warning style */
+.weather-rain-heavy {
+  background: rgba(30, 144, 255, 0.25);
+  border-left: 3px solid #1e90ff; /* dodgerblue */
+  font-weight: 600;
 }
 
 /* Footer under calendar */
