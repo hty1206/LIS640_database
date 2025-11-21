@@ -32,10 +32,10 @@ jobs:
           fi
 
       - name: Generate sports_events.json
-        run: node generate_sports_events.js
+        run: node docs/generate_sports_events.js
 
       - name: Commit & push if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto update sports events"
-          file_pattern: "sports_events.json"
+          file_pattern: "docs/sports_events.json"
