@@ -1,26 +1,35 @@
 name: Update sports events
+# Name of this GitHub Actions workflow (shown in Actions tab)
 
 on:
   schedule:
     - cron: "0 9 * * *"
+    # Run automatically every day at 09:00 UTC
   workflow_dispatch:
+    # Allow manual execution from GitHub Actions UI
 
 permissions:
   contents: write
+  # Allow this workflow to commit and push changes to the repository
 
 jobs:
   update-sports-events:
     runs-on: ubuntu-latest
+    # Use the latest Ubuntu GitHub runner
 
     steps:
+      # Step 1: Clone the repository into the runner
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          # Specify Node.js version (v20)
 
+      # Step 3: Install dependencies if package.json exists
       - name: Install dependencies (if any)
         run: |
           if [ -f package-lock.json ]; then
@@ -31,11 +40,17 @@ jobs:
             echo "No package.json found, skip npm install"
           fi
 
+      # Step 4: Run the script to generate sports_events.json
+      # The working directory is docs/scripts where the JS file is located
       - name: Generate sports_events.json
-        run: node docs/generate_sports_events.js
+        working-directory: docs/scripts
+        run: node generate_sports_events.js
+        # This script should update ../sports_events.json
 
+      # Step 5: Automatically commit and push changes if the JSON file changed
       - name: Commit & push if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto update sports events"
           file_pattern: "docs/sports_events.json"
+          # Only commit if this file has changed
