@@ -139,9 +139,16 @@
                 </label>
               </li>
             </ul>
-
-            <p class="weather-source-note">
-              <br>
+            <br>
+            <p class="source-note">
+              <strong>Sports events</strong> are automatically retrieved from the
+              <a href="https://uwbadgers.com/calendar"
+                target="_blank" rel="noopener noreferrer">
+                UW–Madison Badgers athletics calendar
+              </a>
+              and are refreshed whenever the source schedule is updated.
+            </p>
+            <p class="source-note">
               <strong>Weather</strong> data is automatically updated daily from
               <a href="https://climatology.nelson.wisc.edu/first-order-station-climate-data/madison-climate/#almanac"
                 target="_blank" rel="noopener noreferrer">
@@ -282,6 +289,34 @@
             <span class="field-label">Location</span>
             <span id="detailLocation"></span>
           </p>
+
+          <p class="detail-row" id="detailSportRow">
+            <span class="field-label">Sport</span>
+            <span id="detailSport"></span>
+          </p>
+
+          <p class="detail-row" id="detailDescRow">
+            <span class="detail-label">Details</span>
+            <div class="detail-value detail-description" id="detailDesc"></div>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- Modal: Day Events (list all events on a date)            -->
+    <!-- ========================================================= -->
+    <div id="dayEventsOverlay" class="modal-overlay hidden">
+      <div class="modal modal-detail">
+        <header class="modal-header">
+          <h2 id="dayEventsTitle">Events on this day</h2>
+          <button id="closeDayEventsModal" class="icon-btn">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <ul id="dayEventsList" class="day-events-list">
+            <!-- filled by JS -->
+          </ul>
         </div>
       </div>
     </div>
