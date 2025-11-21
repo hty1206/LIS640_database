@@ -205,6 +205,57 @@ body {
   gap:8px;
 }
 
+/* 小行內排版工具（之後可以重複用） */
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Tag 區塊裡的日期篩選卡片 */
+.date-filter-panel {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-filter-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* 日期輸入排版 */
+.range-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.range-filter-wrap input[type="date"] {
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+/* Clear 按鈕 */
+.date-clear-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 灰掉不在日期範圍內的格子 */
+.cell.out-of-range {
+  opacity: 0.35;
+}
+
 /* ===== Create Event Button ===== */
 .add-event-btn {
   background:var(--accent);

@@ -19,6 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const dateSizeVal = document.getElementById("dateSizeVal");
 
   const newEventBtn = document.getElementById("newEventBtn");
+  // 日期區間篩選（放在 Tag 區塊）
+  const rangeStartInput = document.getElementById("rangeStart");
+  const rangeEndInput = document.getElementById("rangeEnd");
+  const clearRangeBtn = document.getElementById("clearRangeBtn");
 
   // Create Event modal
   const eventModalOverlay = document.getElementById("eventModalOverlay");
@@ -54,6 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let holidays = [];      // from holidays.json
   let userEvents = [];    // created via modal
   let weatherEvents = []; // from ACIS weather APIs
+  // 日期篩選狀態（"YYYY-MM-DD" 字串，或者 null 表示沒有限制）
+  let dateFilterStart = null;
+  let dateFilterEnd = null;
 
   // Selected tag filters
   const selectedTags = new Set(
@@ -132,6 +139,46 @@ document.addEventListener("DOMContentLoaded", () => {
   dateSizeRange.addEventListener("input", (e) => {
     updateDateSize(e.target.value);
   });
+
+  // 更新日期篩選條件（從右側 Tag 區塊的 input 抓值）
+  function updateDateRangeFromInputs() {
+    if (!rangeStartInput || !rangeEndInput) return;
+
+    let startVal = rangeStartInput.value || null; // "YYYY-MM-DD" 或 null
+    let endVal = rangeEndInput.value || null;
+
+    dateFilterStart = startVal;
+    dateFilterEnd = endVal;
+
+    // 如果使用者填反（結束 < 開始），自動交換
+    if (dateFilterStart && dateFilterEnd && dateFilterEnd < dateFilterStart) {
+      const tmp = dateFilterStart;
+      dateFilterStart = dateFilterEnd;
+      dateFilterEnd = tmp;
+
+      rangeStartInput.value = dateFilterStart;
+      rangeEndInput.value = dateFilterEnd;
+    }
+
+    renderCalendarGrid();
+  }
+
+  // 監聽 input change
+  if (rangeStartInput && rangeEndInput) {
+    rangeStartInput.addEventListener("change", updateDateRangeFromInputs);
+    rangeEndInput.addEventListener("change", updateDateRangeFromInputs);
+  }
+
+  // 清除篩選
+  if (clearRangeBtn) {
+    clearRangeBtn.addEventListener("click", () => {
+      dateFilterStart = null;
+      dateFilterEnd = null;
+      rangeStartInput.value = "";
+      rangeEndInput.value = "";
+      renderCalendarGrid();
+    });
+  }
 
   // ===== Weekdays header =====
   function renderWeekdays() {
@@ -319,6 +366,17 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  // 判斷某天是否落在 dateFilterStart ~ dateFilterEnd 之間
+  function isDateInFilterRange(dateStr) {
+    // 沒有設定任何範圍 => 全部顯示
+    if (!dateFilterStart && !dateFilterEnd) return true;
+
+    if (dateFilterStart && dateStr < dateFilterStart) return false;
+    if (dateFilterEnd && dateStr > dateFilterEnd) return false;
+
+    return true;
+  }
+
   function renderCalendarGrid() {
     gridEl.innerHTML = "";
 
@@ -368,8 +426,15 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.add("selected");
       }
 
-      // Events for this day (from holidays + user events + weather + tag filters)
-      const eventsForDay = getEventsForDate(dateStr);
+      // 先看這一天有沒有在日期範圍內
+      const inRange = isDateInFilterRange(dateStr);
+      if (!inRange) {
+        // 灰掉整格（需搭配 .cell.out-of-range 的 CSS）
+        cell.classList.add("out-of-range");
+      }
+
+      // 在範圍內才顯示事件，不在範圍內就不顯示事件
+      const eventsForDay = inRange ? getEventsForDate(dateStr) : [];
 
       eventsForDay.forEach((ev) => {
         const li = document.createElement("li");

@@ -83,6 +83,19 @@
           <!-- Right side : Tags Sidebar -->
           <aside class="tag-sidebar card">
             <h3>Tags</h3>
+  
+            <!-- 日期區間篩選：放在 Tag 區塊底下 -->
+            <div class="date-filter-panel">
+              <div class="date-filter-title">Filter dates</div>
+              <div class="range-filter-wrap">
+                <input id="rangeStart" type="date" />
+                <span>to</span>
+                <input id="rangeEnd" type="date" />
+                <button id="clearRangeBtn" type="button" class="date-clear-btn">Clear</button>
+              </div>
+            </div>
+
+            <!-- Tag 勾選區 -->
             <ul class="tag-list">
               <li class="tag-item">
                 <label>
@@ -93,15 +106,22 @@
 
               <li class="tag-item">
                 <label>
-                  <input type="checkbox" checked data-tag-filter="Closure" />
-                  <span class="tag-name">Closure</span>
+                  <input type="checkbox" checked data-tag-filter="School Closures" />
+                  <span class="tag-name">School Closures</span>
                 </label>
               </li>
 
               <li class="tag-item">
                 <label>
-                  <input type="checkbox" checked data-tag-filter="Sports" />
-                  <span class="tag-name">Sports</span>
+                  <input type="checkbox" checked data-tag-filter="Construction Closures" />
+                  <span class="tag-name">Constructions Closures</span>
+                </label>
+              </li>
+
+              <li class="tag-item">
+                <label>
+                  <input type="checkbox" checked data-tag-filter="Sports Events" />
+                  <span class="tag-name">Sports Events</span>
                 </label>
               </li>
 
@@ -119,6 +139,7 @@
                 </label>
               </li>
             </ul>
+
             <p class="weather-source-note">
               <br>
               <strong>Weather</strong> data is automatically updated daily from
@@ -129,7 +150,6 @@
               and reflects daily observations starting from 2020.
             </p>
           </aside>
-
         </div>
       </section>
 
@@ -218,9 +238,10 @@
             <span class="field-label">Tags</span>
             <select id="eventCal">
               <option>Academic Calendar</option>
-              <option>Closure</option>
-              <option>Sports</option>
-              <option>Weather</option>
+              <option>School Closures</option>
+              <option>Construction Closure</option>
+              <option>Sports Events</option>
+              <option>Weather Calendar</option>
             </select>
           </label>
 
