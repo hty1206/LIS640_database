@@ -124,15 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${monthNames[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
   }
 
-  // 把文字中的 http(s)://... 轉成可點的 <a> 連結
-  function linkify(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, (url) => {
-      const safeUrl = url.replace(/"/g, "&quot;");
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-    });
-  }
-
   // ===== View routing (Calendar <-> Tableau) =====
   function showView(name) {
     views.forEach((v) => {
@@ -317,13 +308,13 @@ document.addEventListener("DOMContentLoaded", () => {
       detailLocationEl.textContent = "";
     }
 
-    // Description
+    // Description (支援超連結)
     if (ev.description) {
-      detailDescEl.textContent = ev.description;
+      detailDescEl.innerHTML = linkify(ev.description);
       detailDescRow.style.display = "";
     } else {
       detailDescRow.style.display = "none";
-      detailDescEl.textContent = "";
+      detailDescEl.innerHTML = "";
     }
 
     // Sport type row（如果你有這一區）
@@ -805,6 +796,36 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to load sports events", err);
     }
   }
+
+  // 像 Google Calendar 一樣顯示 description：
+  // - 保留原本每一行
+  // - 把網址變成可點的 <a>
+  // - 換行用 <br>
+  function linkify(text) {
+    if (!text) return "";
+
+    // 清掉 .NET Task 鬼字串（保險）
+    text = text.replace(/System\.Threading\.Tasks\.Task`1\[System\.String\]/g, "");
+
+    // 1. HTML escape
+    let escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // 2. 先把網址變 <a>，顯示完整 URL
+    const urlPattern = /(https?:\/\/\S+)/g;
+    escaped = escaped.replace(urlPattern, (url) => {
+      const safeUrl = url.replace(/"/g, "&quot;");
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+
+    // 3. 再把換行變成 <br>
+    escaped = escaped.replace(/\n/g, "<br>");
+
+    return escaped;
+  }
+
 
   // Parse precipitation CSV: date,pcpn
   function parsePrecipCsv(csvText) {

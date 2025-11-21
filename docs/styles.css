@@ -365,6 +365,25 @@ body {
   word-break: break-all;
 }
 
+/* ===== Event detail: description block ===== */
+#detailDescRow {
+  white-space: normal;
+}
+
+#detailDesc {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* 讓描述中的每個連結各自一行，看起來整齊 */
+#detailDesc a {
+  display: block;
+  margin-top: 4px;
+  text-decoration: underline;
+  word-break: break-all;   /* 長網址自動換行 */
+  font-size: 13px;
+}
+
 /* ===== Tableau Viewer ===== */
 #view-tableau .tableauPlaceholder {
   display:block;

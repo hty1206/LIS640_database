@@ -141,7 +141,32 @@ async function main() {
 
     if (dateStr && summary) {
       let descText = description || "";
+
+      // ICS 的 \n 換成真實的換行
       descText = descText.replace(/\\n/g, "\n");
+
+      // 把 &amp; 換回 &（Google Calendar 常會這樣 escape）
+      descText = descText.replace(/&amp;/g, "&");
+
+      // 🔧 1) 清掉那個超怪的 .NET Task 字串
+      descText = descText.replace(
+        /System\.Threading\.Tasks\.Task`1\[System\.String\]/g,
+        ""
+      );
+
+      // 🔧 2) 若 description 第一行跟 summary 一樣，就拿掉避免重複
+      const lines = descText.split("\n").map(l => l.trim());
+      if (lines.length > 0) {
+        const firstLine = lines[0];
+        // 有些情況 SUMMARY = "[W] ...", description 第一行也是這個
+        if (firstLine === summary || firstLine.startsWith(summary)) {
+          lines.shift();
+        }
+      }
+      descText = lines.join("\n");
+
+      // 🔧 3) 把連續很多空行縮成最多一個空行
+      descText = descText.replace(/\n{2,}/g, "\n\n").trim();
 
       events.push({
         date: dateStr,          // 已轉成 America/Chicago 日期
@@ -153,6 +178,7 @@ async function main() {
         tag: "Sports Events",
       });
     }
+
   }
 
   fs.writeFileSync(
