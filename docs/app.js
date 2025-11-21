@@ -45,6 +45,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailTimeRow = document.getElementById("detailTimeRow");
   const detailLocationRow = document.getElementById("detailLocationRow");
   const closeDetailModalBtn = document.getElementById("closeDetailModal");
+  const detailDescEl = document.getElementById("detailDesc");
+  const detailDescRow = document.getElementById("detailDescRow");
+  const detailSportEl = document.getElementById("detailSport");
+  const detailSportRow = document.getElementById("detailSportRow");
+  // Day events modal (點整個日期格 / +N more 用)
+  const dayEventsOverlay = document.getElementById("dayEventsOverlay");
+  const dayEventsTitleEl = document.getElementById("dayEventsTitle");
+  const dayEventsListEl = document.getElementById("dayEventsList");
+  const closeDayEventsModalBtn = document.getElementById("closeDayEventsModal");
+
+
 
   // Tag filters (sidebar)
   const tagFilterInputs = document.querySelectorAll("[data-tag-filter]");
@@ -58,6 +69,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let holidays = [];      // from holidays.json
   let userEvents = [];    // created via modal
   let weatherEvents = []; // from ACIS weather APIs
+  let sportsEvents = [];  // 從 sports_events.json 來的運動賽事
+
+  // 每天在 cell 裡最多顯示幾筆事件
+  const MAX_EVENTS_PER_DAY = 3;
+
   // 日期篩選狀態（"YYYY-MM-DD" 字串，或者 null 表示沒有限制）
   let dateFilterStart = null;
   let dateFilterEnd = null;
@@ -78,6 +94,43 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(
       dateObj.getDate()
     )}`;
+  }
+
+  // 根據事件 title 判斷是什麼球類，回傳對應的 icon
+  function getSportIconForEvent(ev) {
+    const title = (ev.title || "").toLowerCase();
+
+    if (title.includes("basketball")) return "🏀";
+    if (title.includes("hockey")) return "🏒";
+    if (title.includes("football")) return "🏈";
+    if (title.includes("volleyball")) return "🏐";
+    if (title.includes("soccer")) return "⚽️";
+    if (title.includes("rowing")) return "🚣";
+    if (title.includes("wrestling")) return "🤼";
+    if (title.includes("swim") || title.includes("diving")) return "🏊";
+
+    // 不在上面幾種就給一個通用的
+    return "🏅";
+  }
+
+  function formatReadableDateStr(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    const monthNames = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+    return `${monthNames[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
+  }
+
+  // 把文字中的 http(s)://... 轉成可點的 <a> 連結
+  function linkify(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => {
+      const safeUrl = url.replace(/"/g, "&quot;");
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
   }
 
   // ===== View routing (Calendar <-> Tableau) =====
@@ -231,11 +284,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Event Detail Modal =====
   function openEventDetailModal(ev, dateStr) {
-    detailTitleEl.textContent = ev.title || "(No title)";
+    // ====== 標題：Sports 事件加上 icon ======
+    let title = ev.title || "(No title)";
+
+    if (ev.tag === "Sports Events") {
+      const icon = getSportIconForEvent(ev);  // 👈 使用剛剛建立的函數
+      title = `${icon} ${title}`;
+    }
+
+    detailTitleEl.textContent = title;
     detailDateEl.textContent = dateStr || ev.date || "—";
     detailTagEl.textContent = ev.tag || "—";
 
-    // Time
+    // ===== Time =====
     if (ev.start || ev.end) {
       const start = ev.start || "";
       const end = ev.end || "";
@@ -256,8 +317,27 @@ document.addEventListener("DOMContentLoaded", () => {
       detailLocationEl.textContent = "";
     }
 
+    // Description
+    if (ev.description) {
+      detailDescEl.textContent = ev.description;
+      detailDescRow.style.display = "";
+    } else {
+      detailDescRow.style.display = "none";
+      detailDescEl.textContent = "";
+    }
+
+    // Sport type row（如果你有這一區）
+    if (ev.sport) {
+      detailSportEl.textContent = ev.sport;
+      detailSportRow.style.display = "";
+    } else {
+      detailSportRow.style.display = "none";
+      detailSportEl.textContent = "";
+    }
+
     detailOverlay.classList.remove("hidden");
   }
+
 
   function closeEventDetailModal() {
     detailOverlay.classList.add("hidden");
@@ -268,6 +348,56 @@ document.addEventListener("DOMContentLoaded", () => {
   detailOverlay.addEventListener("click", (e) => {
     if (e.target === detailOverlay) {
       closeEventDetailModal();
+    }
+  });
+
+  function openDayEventsModal(dateStr) {
+    const events = getEventsForDate(dateStr) || [];
+    dayEventsTitleEl.textContent =
+      `${formatReadableDateStr(dateStr)} (${events.length} events)`;
+
+    dayEventsListEl.innerHTML = "";
+
+    if (!events.length) {
+      const li = document.createElement("li");
+      li.textContent = "No events on this day.";
+      dayEventsListEl.appendChild(li);
+    } else {
+      events.forEach((ev) => {
+        const li = document.createElement("li");
+        li.classList.add("day-event-item");
+
+        const tagPart = ev.tag ? `[${ev.tag}] ` : "";
+        let titleText = ev.title || "(No title)";
+
+        if (ev.tag === "Sports Events") {
+          const icon = getSportIconForEvent(ev);
+          titleText = `${icon} ${titleText}`;
+        }
+
+        li.textContent = `${tagPart}${titleText}`;
+
+        li.addEventListener("click", () => {
+          closeDayEventsModal();
+          openEventDetailModal(ev, dateStr);
+        });
+
+        dayEventsListEl.appendChild(li);
+      });
+    }
+
+    dayEventsOverlay.classList.remove("hidden");
+  }
+
+  function closeDayEventsModal() {
+    dayEventsOverlay.classList.add("hidden");
+  }
+
+  closeDayEventsModalBtn.addEventListener("click", closeDayEventsModal);
+
+  dayEventsOverlay.addEventListener("click", (e) => {
+    if (e.target === dayEventsOverlay) {
+      closeDayEventsModal();
     }
   });
 
@@ -360,7 +490,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getEventsForDate(dateStr) {
-    const allEvents = [...holidays, ...userEvents, ...weatherEvents];
+    const allEvents = [
+    ...holidays,
+    ...userEvents,
+    ...weatherEvents,
+    ...sportsEvents,
+    ];
     return allEvents.filter(
       (ev) => ev.date === dateStr && selectedTags.has(ev.tag)
     );
@@ -434,11 +569,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // 在範圍內才顯示事件，不在範圍內就不顯示事件
-      const eventsForDay = inRange ? getEventsForDate(dateStr) : [];
+      const allEventsForDay = inRange ? getEventsForDate(dateStr) : [];
+      let eventsForDay = allEventsForDay;
 
+      // 如果當天事件太多，就只在 cell 裡顯示前 MAX_EVENTS_PER_DAY 筆
+      if (allEventsForDay.length > MAX_EVENTS_PER_DAY) {
+        eventsForDay = allEventsForDay.slice(0, MAX_EVENTS_PER_DAY);
+      }
+
+      // === 把當天要顯示的事件畫在 cell 裡（這段邏輯可以直接沿用你原本的） ===
       eventsForDay.forEach((ev) => {
         const li = document.createElement("li");
-        li.textContent = ev.title;
+        let text = ev.title || "";
+        if (ev.tag === "Sports Events") {
+          const icon = getSportIconForEvent(ev);
+          text = `${icon} ${text}`;
+        }
+        li.textContent = text;
         li.classList.add("event-pill");
 
         // Base CSS class for tag color, e.g., tag="Holiday" -> .tag-holiday
@@ -475,7 +622,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Tooltip: full title on hover
         li.setAttribute("data-full-title", ev.title || "");
 
-        // When clicking the pill, open detail modal
+        // 點事件 → event detail 視窗（阻止冒泡，不要觸發 cell 的點擊）
         li.addEventListener("click", (clickEvt) => {
           clickEvt.stopPropagation();
           openEventDetailModal(ev, dateStr);
@@ -484,7 +631,22 @@ document.addEventListener("DOMContentLoaded", () => {
         list.appendChild(li);
       });
 
-      // Clicking the cell changes selectedDate
+      // 如果事件超過 MAX_EVENTS_PER_DAY，在 cell 最下面加一行「+N more」
+      if (allEventsForDay.length > MAX_EVENTS_PER_DAY && inRange) {
+        const moreLi = document.createElement("li");
+        moreLi.classList.add("event-more-pill");
+        moreLi.textContent =
+          `+${allEventsForDay.length - MAX_EVENTS_PER_DAY} more`;
+
+        moreLi.addEventListener("click", (evt) => {
+          evt.stopPropagation();
+          openDayEventsModal(dateStr);
+        });
+
+        list.appendChild(moreLi);
+      }
+
+      // 點整個日期格：選取日期 + 打開 Day events 小視窗
       cell.addEventListener("click", () => {
         selectedDate = dateStr;
         pickedEl.textContent = selectedDate;
@@ -494,6 +656,8 @@ document.addEventListener("DOMContentLoaded", () => {
           prevSelected.classList.remove("selected");
         }
         cell.classList.add("selected");
+
+        openDayEventsModal(dateStr);
       });
 
       gridEl.appendChild(cell);
@@ -600,6 +764,48 @@ document.addEventListener("DOMContentLoaded", () => {
     return events;
   }
 
+  function inferSportFromTitle(title) {
+    const t = title.toLowerCase();
+
+    if (t.includes("football")) return "Football";
+    if (t.includes("men's basketball")) return "Men's Basketball";
+    if (t.includes("women's basketball")) return "Women's Basketball";
+    if (t.includes("basketball")) return "Basketball";
+
+    if (t.includes("men's hockey")) return "Men's Hockey";
+    if (t.includes("women's hockey")) return "Women's Hockey";
+    if (t.includes("hockey")) return "Hockey";
+
+    if (t.includes("volleyball")) return "Volleyball";
+    if (t.includes("wrestling")) return "Wrestling";
+    if (t.includes("soccer")) return "Soccer";
+    if (t.includes("rowing")) return "Rowing";
+
+    if (t.includes("swimming & diving")) return "Swimming & Diving";
+    if (t.includes("tennis")) return "Tennis";
+
+    // 找不到就回傳 Unknown，之後可以慢慢補規則
+    return "Unknown";
+  }
+
+  // ===== Sports Events data =====
+  async function loadSportsEvents() {
+    try {
+      const res = await fetch("./sports_events.json");
+      const data = await res.json();
+
+      sportsEvents = data.map(ev => ({
+        ...ev,
+        sport: inferSportFromTitle(ev.title || "")
+      }));
+
+      console.log("✅ Sports events loaded:", sportsEvents.length);
+      renderCalendarGrid();
+    } catch (err) {
+      console.error("Failed to load sports events", err);
+    }
+  }
+
   // Parse precipitation CSV: date,pcpn
   function parsePrecipCsv(csvText) {
     const lines = csvText.trim().split(/\r?\n/);
@@ -662,5 +868,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Initial setup =====
   renderWeekdays();
   populateMonthYearSelects();
+
+  // 先畫一版（只有 holidays + weather + userEvents）
   renderCalendarGrid();
+
+  // 再非同步載入 Sports，載完會自己呼叫 renderCalendarGrid()
+  loadSportsEvents();
 });

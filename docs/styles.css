@@ -92,7 +92,7 @@ body {
   padding:16px;
 }
 
-.weather-source-note {
+.source-note {
   font-size: 0.75rem;
   line-height: 1.4;
   margin-top: 8px;
@@ -100,13 +100,13 @@ body {
 }
 
 /* Weather source link - force same color in all states */
-.weather-source-note a,
-.weather-source-note a:visited {
+.source-note a,
+.source-note a:visited {
   color: rgb(107, 160, 235) !important;
   text-decoration: underline;
 }
 
-.weather-source-note a:hover {
+.source-note a:hover {
   color: #c7d8f5 !important;
 }
 
@@ -348,6 +348,23 @@ body {
   color: var(--muted);
 }
 
+.detail-description {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: #f5f6f8;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.detail-description a {
+  color: #1a73e8;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
 /* ===== Tableau Viewer ===== */
 #view-tableau .tableauPlaceholder {
   display:block;
@@ -429,6 +446,36 @@ select:hover {
   text-overflow: ellipsis;
 }
 
+/* "+N more" row (顯示在 cell 裡的那一行) */
+.event-more-pill {
+  padding: 1px 4px;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.event-more-pill:hover {
+  text-decoration: underline;
+}
+
+/* Day events modal 內的列表 */
+.day-events-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.day-event-item {
+  padding: 4px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.day-event-item:hover {
+  text-decoration: underline;
+}
+
 /* Tooltip on hover with full title */
 .event-pill:hover::after {
   content: attr(data-full-title);
@@ -491,6 +538,11 @@ select:hover {
   background: rgba(30, 144, 255, 0.25);
   border-left: 3px solid #1e90ff; /* dodgerblue */
   font-weight: 600;
+}
+
+/* Sports Events special color */
+.tag-sports-events {
+  border-left: 3px solid #ff00b3;
 }
 
 /* Footer under calendar */
