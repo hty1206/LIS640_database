@@ -141,6 +141,78 @@ body {
   gap:8px;
 }
 
+/* 通用隱藏用 */
+.hidden {
+  display: none !important;
+}
+
+/* 🔍 月曆上方搜尋列 */
+.calendar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.calendar-search input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* 🔍 搜尋結果區：取代原本的 calendar grid */
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+/* 結果上面的 summary 行 */
+.search-summary {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* 單一搜尋結果列（像 Google Calendar 那樣條列） */
+.search-row {
+  display: grid;
+  grid-template-columns: 2.5fr 2fr 6fr;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.search-row:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.search-date {
+  font-weight: 600;
+}
+
+.search-time {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.search-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ===== Weekdays + Grid ===== */
 .weekdays, .grid {
   display:grid;

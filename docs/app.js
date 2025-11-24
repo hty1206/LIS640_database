@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const weekdaysEl = document.getElementById("weekdays");
   const gridEl = document.getElementById("grid");
   const pickedEl = document.getElementById("picked");
+  // 🔍 Search bar + results
+  const eventSearchInput = document.getElementById("eventSearchInput");
+  const eventSearchButton = document.getElementById("eventSearchButton");
+  const clearSearchButton = document.getElementById("clearSearchButton");
+  const searchResultsEl = document.getElementById("searchResults");
 
   const todayBtn = document.getElementById("todayBtn");
   const prevBtn = document.getElementById("prevBtn");
@@ -54,8 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const dayEventsTitleEl = document.getElementById("dayEventsTitle");
   const dayEventsListEl = document.getElementById("dayEventsList");
   const closeDayEventsModalBtn = document.getElementById("closeDayEventsModal");
-
-
 
   // Tag filters (sidebar)
   const tagFilterInputs = document.querySelectorAll("[data-tag-filter]");
@@ -107,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (title.includes("soccer")) return "⚽️";
     if (title.includes("rowing")) return "🚣";
     if (title.includes("wrestling")) return "🤼";
+    if (title.includes("tennis")) return "🎾";
     if (title.includes("swim") || title.includes("diving")) return "🏊";
 
     // 不在上面幾種就給一個通用的
@@ -329,7 +333,6 @@ document.addEventListener("DOMContentLoaded", () => {
     detailOverlay.classList.remove("hidden");
   }
 
-
   function closeEventDetailModal() {
     detailOverlay.classList.add("hidden");
   }
@@ -480,13 +483,18 @@ document.addEventListener("DOMContentLoaded", () => {
     pickedEl.textContent = selectedDate || "—";
   }
 
-  function getEventsForDate(dateStr) {
-    const allEvents = [
-    ...holidays,
-    ...userEvents,
-    ...weatherEvents,
-    ...sportsEvents,
+  // 把所有事件合在一起（給搜尋 & getEventsForDate 共用）
+  function getAllEventsArray() {
+    return [
+      ...holidays,
+      ...userEvents,
+      ...weatherEvents,
+      ...sportsEvents,
     ];
+  }
+
+  function getEventsForDate(dateStr) {
+    const allEvents = getAllEventsArray();
     return allEvents.filter(
       (ev) => ev.date === dateStr && selectedTags.has(ev.tag)
     );
@@ -504,6 +512,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderCalendarGrid() {
+    // 每次畫月曆時，確保回到「月曆模式」
+    if (searchResultsEl) {
+      searchResultsEl.classList.add("hidden");
+      searchResultsEl.innerHTML = "";
+    }
+    weekdaysEl.classList.remove("hidden");
+    gridEl.classList.remove("hidden");
+
     gridEl.innerHTML = "";
 
     updateTitleAndPicked();
@@ -568,7 +584,7 @@ document.addEventListener("DOMContentLoaded", () => {
         eventsForDay = allEventsForDay.slice(0, MAX_EVENTS_PER_DAY);
       }
 
-      // === 把當天要顯示的事件畫在 cell 裡（這段邏輯可以直接沿用你原本的） ===
+      // === 把當天要顯示的事件畫在 cell 裡 ===
       eventsForDay.forEach((ev) => {
         const li = document.createElement("li");
         let text = ev.title || "";
@@ -655,46 +671,130 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== Navigation: Today / Prev / Next / dropdowns =====
-  todayBtn.addEventListener("click", () => {
-    currentYear = today.getFullYear();
-    currentMonth = today.getMonth();
-    selectedDate = formatDate(today);
-    populateMonthYearSelects();
-    renderCalendarGrid();
-  });
+  // ===== 🔍 Search: 像 Google Calendar 的條列式結果 =====
 
-  prevBtn.addEventListener("click", () => {
-    if (currentMonth === 0) {
-      currentMonth = 11;
-      currentYear -= 1;
-    } else {
-      currentMonth -= 1;
+  // 顯示成「19 OCT 2025, SUN」這種格式
+  function formatSearchDateLabel(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    const weekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+    const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    return `${d} ${months[dt.getMonth()]} ${y}, ${weekdays[dt.getDay()]}`;
+  }
+
+  function enterSearchMode(term, events) {
+    if (!searchResultsEl) return;
+
+    // 隱藏月曆，顯示搜尋結果清單
+    weekdaysEl.classList.add("hidden");
+    gridEl.classList.add("hidden");
+    searchResultsEl.classList.remove("hidden");
+
+    searchResultsEl.innerHTML = "";
+
+    const summary = document.createElement("div");
+    summary.className = "search-summary";
+    summary.textContent = `Results for "${term}" (${events.length})`;
+    searchResultsEl.appendChild(summary);
+
+    if (events.length === 0) return;
+
+    events.forEach((ev) => {
+      const row = document.createElement("div");
+      row.className = "search-row";
+
+      const dateDiv = document.createElement("div");
+      dateDiv.className = "search-date";
+      dateDiv.textContent = formatSearchDateLabel(ev.date);
+
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "search-time";
+      if (ev.start || ev.end) {
+        const s = ev.start || "";
+        const e = ev.end || "";
+        timeDiv.textContent = s && e ? `${s} – ${e}` : (s || e);
+      } else {
+        timeDiv.textContent = "All day";
+      }
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "search-title";
+
+      let titleText = ev.title || "";
+      if (ev.tag === "Sports Events") {
+        const icon = getSportIconForEvent(ev);
+        titleText = `${icon} ${titleText}`;
+      }
+      titleDiv.textContent = titleText;
+
+      row.appendChild(dateDiv);
+      row.appendChild(timeDiv);
+      row.appendChild(titleDiv);
+
+      // 點整列 -> 打開事件詳細
+      row.addEventListener("click", () => {
+        openEventDetailModal(ev, ev.date);
+      });
+
+      searchResultsEl.appendChild(row);
+    });
+
+    titleText.textContent = `Search: "${term}"`;
+  }
+
+  function exitSearchMode() {
+    if (!searchResultsEl) return;
+    searchResultsEl.classList.add("hidden");
+    searchResultsEl.innerHTML = "";
+    weekdaysEl.classList.remove("hidden");
+    gridEl.classList.remove("hidden");
+    if (eventSearchInput) eventSearchInput.value = "";
+    renderCalendarGrid();
+  }
+
+  function handleSearch() {
+    if (!eventSearchInput) return;
+    const term = eventSearchInput.value.trim();
+    if (!term) {
+      exitSearchMode();
+      return;
     }
-    populateMonthYearSelects();
-    renderCalendarGrid();
-  });
 
-  nextBtn.addEventListener("click", () => {
-    if (currentMonth === 11) {
-      currentMonth = 0;
-      currentYear += 1;
-    } else {
-      currentMonth += 1;
-    }
-    populateMonthYearSelects();
-    renderCalendarGrid();
-  });
+    const allEvents = getAllEventsArray().filter(
+      (ev) => ev.title && selectedTags.has(ev.tag)
+    );
 
-  monthSelect.addEventListener("change", () => {
-    currentMonth = Number(monthSelect.value);
-    renderCalendarGrid();
-  });
+    const matches = allEvents.filter((ev) =>
+      ev.title.toLowerCase().includes(term.toLowerCase())
+    );
 
-  yearSelect.addEventListener("change", () => {
-    currentYear = Number(yearSelect.value);
-    renderCalendarGrid();
-  });
+    // 依日期 + start time 排序
+    matches.sort((a, b) => {
+      if (a.date === b.date) {
+        const sa = a.start || "";
+        const sb = b.start || "";
+        return sa.localeCompare(sb);
+      }
+      return a.date.localeCompare(b.date);
+    });
+
+    enterSearchMode(term, matches);
+  }
+
+  if (eventSearchButton) {
+    eventSearchButton.addEventListener("click", handleSearch);
+  }
+  if (eventSearchInput) {
+    eventSearchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        handleSearch();
+      }
+    });
+  }
+  if (clearSearchButton) {
+    clearSearchButton.addEventListener("click", exitSearchMode);
+  }
 
   // ===== Holidays data (holidays.json) =====
   fetch("holidays.json")
@@ -825,7 +925,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return escaped;
   }
-
 
   // Parse precipitation CSV: date,pcpn
   function parsePrecipCsv(csvText) {

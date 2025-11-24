@@ -69,10 +69,25 @@
               </div>
             </header>
 
+            <!-- 🔍 事件搜尋列 -->
+            <div class="calendar-search">
+              <input
+                type="text"
+                id="eventSearchInput"
+                placeholder="Search events by title..."
+              />
+              <button id="eventSearchButton">Search</button>
+              <button id="clearSearchButton" class="icon-btn" title="Clear search">✕</button>
+            </div>
+
             <section class="calendar">
+              <!-- 一般月曆視圖 -->
               <div class="weekdays" id="weekdays"></div>
               <div class="grid" id="grid"></div>
-            </section>
+
+              <!-- 搜尋結果（條列式） -->
+              <div class="search-results hidden" id="searchResults"></div>
+            </section> 
 
             <footer class="foot">
               <br>
@@ -141,7 +156,7 @@
             </ul>
             <br>
             <p class="source-note">
-              <strong>Sports events</strong> are automatically retrieved from the
+              <strong>Sports events</strong> data is automatically retrieved from the
               <a href="https://uwbadgers.com/calendar"
                 target="_blank" rel="noopener noreferrer">
                 UW–Madison Badgers athletics calendar
