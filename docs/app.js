@@ -99,6 +99,69 @@ document.addEventListener("DOMContentLoaded", () => {
     )}`;
   }
 
+  // Add event listener for the "Previous Month" button
+  prevBtn.addEventListener("click", () => {
+    if (currentMonth === 0) {
+      currentMonth = 11; // Wrap around to December
+      currentYear -= 1; // Go back one year
+    } else {
+      currentMonth -= 1; // Go to the previous month
+    }
+
+    renderCalendarGrid(); // Re-render calendar with the new month and year
+    titleText.textContent = `${monthNames[currentMonth]} ${currentYear}`; // Update the month/year display
+    monthSelect.value = currentMonth; // Update the month dropdown
+    yearSelect.value = currentYear; // Update the year dropdown
+  });
+
+  // Add event listener for the "Next Month" button
+  nextBtn.addEventListener("click", () => {
+    if (currentMonth === 11) {
+      currentMonth = 0; // Wrap around to January
+      currentYear += 1; // Go forward one year
+    } else {
+      currentMonth += 1; // Go to the next month
+    }
+
+    renderCalendarGrid(); // Re-render calendar with the new month and year
+    titleText.textContent = `${monthNames[currentMonth]} ${currentYear}`; // Update the month/year display
+    monthSelect.value = currentMonth; // Update the month dropdown
+    yearSelect.value = currentYear; // Update the year dropdown
+  });
+
+  // Add event listeners for month and year changes
+  monthSelect.addEventListener("change", (e) => {
+    currentMonth = parseInt(e.target.value); // Update current month
+    renderCalendarGrid(); // Re-render calendar with the new month
+  });
+
+  yearSelect.addEventListener("change", (e) => {
+    currentYear = parseInt(e.target.value); // Update current year
+    renderCalendarGrid(); // Re-render calendar with the new year
+  });
+
+  // ===== Add event listener for the "Today" button =====
+  todayBtn.addEventListener("click", () => {
+    const today = new Date();
+    currentMonth = today.getMonth(); // Set current month to today's month
+    currentYear = today.getFullYear(); // Set current year to today's year
+    selectedDate = formatDate(today); // Set the selected date to today's date
+
+    renderCalendarGrid(); // Re-render the calendar grid with today's date
+    pickedEl.textContent = selectedDate; // Update the "picked" section with today's date
+
+    // Update the right top section (Month and Year display)
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+    ];
+    titleText.textContent = `${monthNames[currentMonth]} ${currentYear}`; // Update month and year display
+
+    // Update the month and year selects to reflect today's date
+    monthSelect.value = currentMonth; // Set the current month in the dropdown
+    yearSelect.value = currentYear; // Set the current year in the dropdown
+  });
+
+
   // 根據事件 title 判斷是什麼球類，回傳對應的 icon
   function getSportIconForEvent(ev) {
     const title = (ev.title || "").toLowerCase();
@@ -512,21 +575,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderCalendarGrid() {
-    // 每次畫月曆時，確保回到「月曆模式」
-    if (searchResultsEl) {
-      searchResultsEl.classList.add("hidden");
-      searchResultsEl.innerHTML = "";
-    }
-    weekdaysEl.classList.remove("hidden");
-    gridEl.classList.remove("hidden");
-
+    // Clear the previous calendar cells
     gridEl.innerHTML = "";
 
-    updateTitleAndPicked();
+    updateTitleAndPicked(); // Update the month/year title and the selected date label
 
     const firstDay = new Date(currentYear, currentMonth, 1);
-    const startWeekday = firstDay.getDay(); // 0–6
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const startWeekday = firstDay.getDay(); // 0–6 (Sun to Sat)
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate(); // Number of days in the month
 
     const totalCells = startWeekday + daysInMonth;
 
@@ -535,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cell.className = "cell";
 
       if (cellIndex < startWeekday) {
-        // Empty padding cell
+        // Add empty cells for the first week if the month doesn't start on Sunday
         cell.classList.add("empty");
         gridEl.appendChild(cell);
         continue;
@@ -554,7 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
       list.className = "event-list";
       cell.appendChild(list);
 
-      // Today highlight
+      // Highlight today's date
       if (
         dateObj.getFullYear() === today.getFullYear() &&
         dateObj.getMonth() === today.getMonth() &&
@@ -563,29 +619,29 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.add("today");
       }
 
-      // Selected date outline
+      // Highlight selected date
       if (dateStr === selectedDate) {
         cell.classList.add("selected");
       }
 
-      // 先看這一天有沒有在日期範圍內
+      // Filter out dates that are not within the selected date range
       const inRange = isDateInFilterRange(dateStr);
       if (!inRange) {
-        // 灰掉整格（需搭配 .cell.out-of-range 的 CSS）
+        // Gray out the cell if it's out of the filter range
         cell.classList.add("out-of-range");
       }
 
-      // 在範圍內才顯示事件，不在範圍內就不顯示事件
-      const allEventsForDay = inRange ? getEventsForDate(dateStr) : [];
-      let eventsForDay = allEventsForDay;
+      // Get events for the selected day
+      const eventsForDay = inRange ? getEventsForDate(dateStr) : [];
+      let eventsToDisplay = eventsForDay;
 
-      // 如果當天事件太多，就只在 cell 裡顯示前 MAX_EVENTS_PER_DAY 筆
-      if (allEventsForDay.length > MAX_EVENTS_PER_DAY) {
-        eventsForDay = allEventsForDay.slice(0, MAX_EVENTS_PER_DAY);
+      // Limit the number of events shown in a day (MAX_EVENTS_PER_DAY)
+      if (eventsForDay.length > MAX_EVENTS_PER_DAY) {
+        eventsToDisplay = eventsForDay.slice(0, MAX_EVENTS_PER_DAY);
       }
 
-      // === 把當天要顯示的事件畫在 cell 裡 ===
-      eventsForDay.forEach((ev) => {
+      // Render events for the day
+      eventsToDisplay.forEach((ev) => {
         const li = document.createElement("li");
         let text = ev.title || "";
         if (ev.tag === "Sports Events") {
@@ -595,55 +651,22 @@ document.addEventListener("DOMContentLoaded", () => {
         li.textContent = text;
         li.classList.add("event-pill");
 
-        // Base CSS class for tag color, e.g., tag="Holiday" -> .tag-holiday
+        // Apply tag color class (e.g., "tag-holiday" for Holiday)
         if (ev.tag) {
           li.classList.add(
             "tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase()
           );
         }
 
-        // Temperature-based weather coloring
-        if (ev.tag === "Weather" && ev.avgt != null) {
-          const avg = parseFloat(ev.avgt);
-          if (!Number.isNaN(avg)) {
-            if (avg >= 80) {
-              // Hot day
-              li.classList.add("weather-hot");
-            } else if (avg <= 32) {
-              // Cold day
-              li.classList.add("weather-cold");
-            }
-          }
-        }
-
-        // Precipitation alert (heavy rain)
-        if (ev.tag === "Weather" && ev.pcpn != null) {
-          const rain = parseFloat(ev.pcpn);
-          if (!Number.isNaN(rain) && rain >= 0.5) {
-            // Add visual warning style and icon
-            li.classList.add("weather-rain-heavy");
-            li.textContent = "🌧️ " + ev.title;
-          }
-        }
-
-        // Tooltip: full title on hover
-        li.setAttribute("data-full-title", ev.title || "");
-
-        // 點事件 → event detail 視窗（阻止冒泡，不要觸發 cell 的點擊）
-        li.addEventListener("click", (clickEvt) => {
-          clickEvt.stopPropagation();
-          openEventDetailModal(ev, dateStr);
-        });
-
         list.appendChild(li);
       });
 
-      // 如果事件超過 MAX_EVENTS_PER_DAY，在 cell 最下面加一行「+N more」
-      if (allEventsForDay.length > MAX_EVENTS_PER_DAY && inRange) {
+      // If there are more events than the max limit, show a "+N more" option
+      if (eventsForDay.length > MAX_EVENTS_PER_DAY && inRange) {
         const moreLi = document.createElement("li");
         moreLi.classList.add("event-more-pill");
         moreLi.textContent =
-          `+${allEventsForDay.length - MAX_EVENTS_PER_DAY} more`;
+          `+${eventsForDay.length - MAX_EVENTS_PER_DAY} more`;
 
         moreLi.addEventListener("click", (evt) => {
           evt.stopPropagation();
@@ -653,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
         list.appendChild(moreLi);
       }
 
-      // 點整個日期格：選取日期 + 打開 Day events 小視窗
+      // Handle cell click to select the date and open the day events modal
       cell.addEventListener("click", () => {
         selectedDate = dateStr;
         pickedEl.textContent = selectedDate;
@@ -754,33 +777,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleSearch() {
-    if (!eventSearchInput) return;
     const term = eventSearchInput.value.trim();
     if (!term) {
       exitSearchMode();
       return;
     }
 
-    const allEvents = getAllEventsArray().filter(
-      (ev) => ev.title && selectedTags.has(ev.tag)
-    );
-
-    const matches = allEvents.filter((ev) =>
+    const allEvents = getAllEventsArray();
+    const filteredEvents = allEvents.filter(ev =>
       ev.title.toLowerCase().includes(term.toLowerCase())
     );
 
-    // 依日期 + start time 排序
-    matches.sort((a, b) => {
-      if (a.date === b.date) {
-        const sa = a.start || "";
-        const sb = b.start || "";
-        return sa.localeCompare(sb);
-      }
-      return a.date.localeCompare(b.date);
-    });
-
-    enterSearchMode(term, matches);
+    enterSearchMode(term, filteredEvents);
   }
+
 
   if (eventSearchButton) {
     eventSearchButton.addEventListener("click", handleSearch);
