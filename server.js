@@ -49,34 +49,58 @@ app.get("/api/events", (req, res) => {
 
 // POST /api/events - create a new event
 app.post("/api/events", (req, res) => {
-  const { title, date, start, end, location, tag, sport, details, description } =
-    req.body || {};
+  try {
+    // Safely read fields from body
+    const body = req.body || {};
+    const title = typeof body.title === "string" ? body.title : "";
+    const date = typeof body.date === "string" ? body.date : "";
+    const start = typeof body.start === "string" ? body.start : "";
+    const end = typeof body.end === "string" ? body.end : "";
+    const location =
+      typeof body.location === "string" ? body.location : "";
+    const tag = typeof body.tag === "string" ? body.tag : "";
+    const sport = typeof body.sport === "string" ? body.sport : null;
 
-  if (!title || !date || !tag) {
-    return res
-      .status(400)
-      .json({ error: "title, date, and tag are required" });
+    // Details may come as `details` or `description`
+    let finalDetails = null;
+    if (typeof body.details === "string" && body.details.trim() !== "") {
+      finalDetails = body.details.trim();
+    } else if (
+      typeof body.description === "string" &&
+      body.description.trim() !== ""
+    ) {
+      finalDetails = body.description.trim();
+    }
+
+    if (!title || !date || !tag) {
+      return res
+        .status(400)
+        .json({ error: "title, date, and tag are required" });
+    }
+
+    const events = readEvents();
+
+    const newEvent = {
+      id: Date.now(),
+      source: "user",
+      title,
+      date,
+      start,
+      end,
+      location,
+      tag,
+      sport,
+      details: finalDetails,
+    };
+
+    events.push(newEvent);
+    writeEvents(events);
+
+    return res.status(201).json(newEvent);
+  } catch (err) {
+    console.error("Error in POST /api/events:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
-
-  const events = readEvents();
-
-  const newEvent = {
-    id: Date.now(),
-    source: "user",
-    title,
-    date,
-    start: start || "",
-    end: end || "",
-    location: location || "",
-    tag,
-    sport: sport || null,
-    details: finalDetails,
-  };
-
-  events.push(newEvent);
-  writeEvents(events);
-
-  res.status(201).json(newEvent);
 });
 
 // DELETE /api/events/:id - delete by id
@@ -98,3 +122,4 @@ app.delete("/api/events/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
+
