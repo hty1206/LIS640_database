@@ -261,10 +261,26 @@
             <select id="eventCal">
               <option>Academic Calendar</option>
               <option>School Closures</option>
-              <option>Construction Closure</option>
+              <option>Construction Closures</option>
               <option>Sports Events</option>
-              <option>Weather Calendar</option>
+              <option>Weather</option>
+              <option>Holiday</option>
             </select>
+          </label>
+
+          <!-- Fields shown only when "Sports Events" is selected (optional) -->
+          <label class="field sport-only hidden">
+            <span class="field-label">Sport</span>
+            <input id="eventSport" type="text" placeholder="e.g. Rowing, Football..." />
+          </label>
+
+          <label class="field sport-only hidden">
+            <span class="field-label">Details</span>
+            <textarea
+              id="eventDetails"
+              rows="3"
+              placeholder="Optional details or URL..."
+            ></textarea>
           </label>
 
           <div class="modal-footer">
