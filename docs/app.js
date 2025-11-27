@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // - On GitHub Pages: replace with your Render backend URL
   const API_BASE_URL =
     location.hostname === "localhost"
-      ? ""
-      : "https://YOUR-RENDER-URL-HERE"; // TODO: replace after deploy
+      ? "http://localhost:3000"
+      : "https://data-tagging-project.onrender.com";
 
   // ===== Basic DOM references =====
   const views = document.querySelectorAll(".view");
