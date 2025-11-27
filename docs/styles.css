@@ -141,12 +141,12 @@ body {
   gap:8px;
 }
 
-/* 通用隱藏用 */
+/* Generic hidden utility class */
 .hidden {
   display: none !important;
 }
 
-/* 🔍 月曆上方搜尋列 */
+/* 🔍 Calendar top search bar */
 .calendar-search {
   display: flex;
   align-items: center;
@@ -163,7 +163,7 @@ body {
   color: var(--text);
 }
 
-/* 🔍 搜尋結果區：取代原本的 calendar grid */
+/* 🔍 Search results area: replaces the calendar grid */
 .search-results {
   display: flex;
   flex-direction: column;
@@ -172,14 +172,14 @@ body {
   overflow-y: auto;
 }
 
-/* 結果上面的 summary 行 */
+/* Summary row shown above search results */
 .search-summary {
   font-size: 13px;
   color: var(--muted);
   margin-bottom: 4px;
 }
 
-/* 單一搜尋結果列（像 Google Calendar 那樣條列） */
+/* Single search result row (similar to Google Calendar list style) */
 .search-row {
   display: grid;
   grid-template-columns: 2.5fr 2fr 6fr;
@@ -277,14 +277,14 @@ body {
   gap:8px;
 }
 
-/* 小行內排版工具（之後可以重複用） */
+/* Small inline layout helper (reusable) */
 .inline {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* Tag 區塊裡的日期篩選卡片 */
+/* Date range filter card in tag sidebar */
 .date-filter-panel {
   margin-top: 14px;
   margin-bottom: 14px;
@@ -301,7 +301,7 @@ body {
   color: var(--muted);
 }
 
-/* 日期輸入排版 */
+/* Date input layout */
 .range-filter-wrap {
   display: flex;
   align-items: center;
@@ -315,7 +315,7 @@ body {
   font-size: 12px;
 }
 
-/* Clear 按鈕 */
+/* Clear button */
 .date-clear-btn {
   padding: 4px 10px;
   font-size: 12px;
@@ -323,7 +323,7 @@ body {
   cursor: pointer;
 }
 
-/* 灰掉不在日期範圍內的格子 */
+/* Dim cells that are outside the selected date range */
 .cell.out-of-range {
   opacity: 0.35;
 }
@@ -447,12 +447,12 @@ body {
   line-height: 1.4;
 }
 
-/* 讓描述中的每個連結各自一行，看起來整齊 */
+/* Place each link in the description on its own line for readability */
 #detailDesc a {
   display: block;
   margin-top: 4px;
   text-decoration: underline;
-  word-break: break-all;   /* 長網址自動換行 */
+  word-break: break-all;   /* Long URLs wrap automatically */
   font-size: 13px;
 }
 
@@ -537,7 +537,7 @@ select:hover {
   text-overflow: ellipsis;
 }
 
-/* "+N more" row (顯示在 cell 裡的那一行) */
+/* "+N more" row shown inside a calendar cell */
 .event-more-pill {
   padding: 1px 4px;
   margin-top: 2px;
@@ -550,7 +550,7 @@ select:hover {
   text-decoration: underline;
 }
 
-/* Day events modal 內的列表 */
+/* List inside the day events modal */
 .day-events-list {
   list-style: none;
   padding: 0;

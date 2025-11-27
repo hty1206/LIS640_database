@@ -1,4 +1,12 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Base URL for backend API
+  // - Local dev (http://localhost:3000): use same origin => ""
+  // - On GitHub Pages: replace with your Render backend URL
+  const API_BASE_URL =
+    location.hostname === "localhost"
+      ? ""
+      : "https://YOUR-RENDER-URL-HERE"; // TODO: replace after deploy
+
   // ===== Basic DOM references =====
   const views = document.querySelectorAll(".view");
   const navLinks = document.querySelectorAll("[data-link]");
@@ -8,7 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const weekdaysEl = document.getElementById("weekdays");
   const gridEl = document.getElementById("grid");
   const pickedEl = document.getElementById("picked");
-  // 🔍 Search bar + results
+
+  // Search bar + results
   const eventSearchInput = document.getElementById("eventSearchInput");
   const eventSearchButton = document.getElementById("eventSearchButton");
   const clearSearchButton = document.getElementById("clearSearchButton");
@@ -24,7 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const dateSizeVal = document.getElementById("dateSizeVal");
 
   const newEventBtn = document.getElementById("newEventBtn");
-  // 日期區間篩選（放在 Tag 區塊）
+  
+  // Date range filter (inside Tag sidebar)
   const rangeStartInput = document.getElementById("rangeStart");
   const rangeEndInput = document.getElementById("rangeEnd");
   const clearRangeBtn = document.getElementById("clearRangeBtn");
@@ -39,6 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const eventEndInput = document.getElementById("eventEnd");
   const eventLocationInput = document.getElementById("eventLocation");
   const tagSelect = document.getElementById("eventCal");
+  const eventSportInput = document.getElementById("eventSport");
+  const eventDetailsInput = document.getElementById("eventDetails");
 
   // Event detail modal elements
   const detailOverlay = document.getElementById("eventDetailOverlay");
@@ -54,11 +66,47 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailDescRow = document.getElementById("detailDescRow");
   const detailSportEl = document.getElementById("detailSport");
   const detailSportRow = document.getElementById("detailSportRow");
-  // Day events modal (點整個日期格 / +N more 用)
+
+  // Day events modal (for clicking entire day or "+N more")
   const dayEventsOverlay = document.getElementById("dayEventsOverlay");
   const dayEventsTitleEl = document.getElementById("dayEventsTitle");
   const dayEventsListEl = document.getElementById("dayEventsList");
   const closeDayEventsModalBtn = document.getElementById("closeDayEventsModal");
+
+  // === Show / hide Sport & Details fields when tag is "Sports Events" ===
+  // Dropdown for selecting event tag
+  const eventCalSelect = document.getElementById('eventCal');
+
+  // All fields that should appear only for sports events
+  const sportOnlyFields = document.querySelectorAll('.sport-only');
+
+  /**
+   * Controls visibility of Sport and Details fields
+   * - If tag = "Sports Events" → show fields
+   * - Otherwise → hide fields and clear values
+   */
+  function updateSportFieldsVisibility() {
+    const isSports = eventCalSelect.value === 'Sports Events';
+
+    sportOnlyFields.forEach((el) => {
+      el.classList.toggle('hidden', !isSports);
+    });
+
+    // If not Sports Events, clear the optional inputs
+    if (!isSports) {
+      const sportInput = document.getElementById('eventSport');
+      const detailsInput = document.getElementById('eventDetails');
+
+      if (sportInput) sportInput.value = '';
+      if (detailsInput) detailsInput.value = '';
+    }
+  }
+
+  // Run once when modal opens to ensure correct initial state
+  updateSportFieldsVisibility();
+
+  // Update fields when tag selection changes
+  eventCalSelect.addEventListener('change', updateSportFieldsVisibility);
 
   // Tag filters (sidebar)
   const tagFilterInputs = document.querySelectorAll("[data-tag-filter]");
@@ -70,18 +118,37 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedDate = formatDate(today);
 
   let holidays = [];      // from holidays.json
-  let userEvents = [];    // created via modal
+  let userEvents = [];    // user-created events (localStorage)
   let weatherEvents = []; // from ACIS weather APIs
-  let sportsEvents = [];  // 從 sports_events.json 來的運動賽事
+  let sportsEvents = [];  // from sports_events.json
+  let editingEventId = null;
 
-  // 每天在 cell 裡最多顯示幾筆事件
+  // Load user-created events from backend API
+  async function loadUserEventsFromServer() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/events`);
+      if (!res.ok) {
+        console.error("Failed to fetch user events:", res.status);
+        userEvents = [];
+        return;
+      }
+      const data = await res.json();
+      userEvents = Array.isArray(data) ? data : [];
+      console.log("✅ User events loaded:", userEvents.length);
+    } catch (err) {
+      console.error("Error loading user events from server:", err);
+      userEvents = [];
+    }
+  }
+
+  // Maximum events displayed per day cell
   const MAX_EVENTS_PER_DAY = 3;
 
-  // 日期篩選狀態（"YYYY-MM-DD" 字串，或者 null 表示沒有限制）
+  // Date range filter state (YYYY-MM-DD or null)
   let dateFilterStart = null;
   let dateFilterEnd = null;
 
-  // Selected tag filters
+  // Currently selected tag filters
   const selectedTags = new Set(
     Array.from(tagFilterInputs)
       .filter((el) => el.checked)
@@ -162,24 +229,113 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
-  // 根據事件 title 判斷是什麼球類，回傳對應的 icon
+  // Determine sport icon based on event title keywords
   function getSportIconForEvent(ev) {
-    const title = (ev.title || "").toLowerCase();
+    // console.log("getSportIconForEvent ev =", ev);
 
+    // Normalize sport & title: lowercase + remove spaces
+    const rawSport = (ev.sport || "").toLowerCase();
+    const rawTitle = (ev.title || "").toLowerCase();
+
+    const sport = rawSport.replace(/\s+/g, "");
+    const title = rawTitle.replace(/\s+/g, "");
+
+    // ==== Check sport field first ====
+    if (sport.includes("basketball")) return "🏀";
+    if (sport.includes("football")) return "🏈";
+    if (sport.includes("soccer")) return "⚽️";
+    if (sport.includes("volleyball")) return "🏐";
+    if (sport.includes("tennis")) return "🎾";
+    if (sport.includes("hockey")) return "🏒";
+    if (sport.includes("rowing")) return "🚣";
+    if (sport.includes("swim") || sport.includes("diving")) return "🏊";
+    if (sport.includes("wrestling")) return "🤼";
+
+    // ==== Then check title (also normalized without spaces) ====
     if (title.includes("basketball")) return "🏀";
-    if (title.includes("hockey")) return "🏒";
     if (title.includes("football")) return "🏈";
-    if (title.includes("volleyball")) return "🏐";
     if (title.includes("soccer")) return "⚽️";
-    if (title.includes("rowing")) return "🚣";
-    if (title.includes("wrestling")) return "🤼";
+    if (title.includes("volleyball")) return "🏐";
     if (title.includes("tennis")) return "🎾";
+    if (title.includes("hockey")) return "🏒";
+    if (title.includes("rowing")) return "🚣";
     if (title.includes("swim") || title.includes("diving")) return "🏊";
+    if (title.includes("wrestling")) return "🤼";
 
-    // 不在上面幾種就給一個通用的
+    // Fallback: default medal icon if no match found
     return "🏅";
   }
 
+  /**
+   * Create an event pill element (<li>) for a given event.
+   * - Shows sport icon for "Sports Events"
+   * - Applies tag color class
+   * - Adds delete button for user-created events
+   */
+  function createEventPill(ev) {
+    const li = document.createElement("li");
+
+    // Base text: title (with sport icon if needed)
+    let text = ev.title || "";
+    if (ev.tag === "Sports Events") {
+      const icon = getSportIconForEvent(ev);
+      text = `${icon} ${text}`;
+    }
+    li.textContent = text;
+
+    // Base pill style
+    li.classList.add("event-pill");
+
+    // Tag color class (e.g. "tag-holiday", "tag-academic-calendar")
+    if (ev.tag) {
+      li.classList.add("tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase());
+    }
+
+    // ✅ Only user-created events can be deleted
+    if (ev.source === "user") {
+      const deleteBtn = document.createElement("span");
+      deleteBtn.textContent = "🗑 ";
+      deleteBtn.className = "delete-event-btn";
+      deleteBtn.title = "Delete this event";
+
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // prevent cell click
+        deleteUserEventById(ev.id);
+      });
+
+      li.insertBefore(deleteBtn, li.firstChild);
+    }
+
+    return li;
+  }
+
+  // Delete a user-created event (backend + local state)
+  async function deleteUserEventById(id) {
+    const index = userEvents.findIndex((ev) => ev.id === id);
+    if (index === -1) return;
+
+    if (!confirm("Are you sure you want to delete this event?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        console.error("Failed to delete event:", res.status);
+        alert("Failed to delete event on server. Please try again.");
+        return;
+      }
+
+      // Remove from local array and re-render
+      userEvents.splice(index, 1);
+      renderCalendarGrid();
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      alert("Error deleting event. Please check console for details.");
+    }
+  }
+
+  // Convert YYYY-MM-DD to a human-readable date
   function formatReadableDateStr(dateStr) {
     if (!dateStr) return "";
     const [y, m, d] = dateStr.split("-").map(Number);
@@ -251,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateDateSize(e.target.value);
   });
 
-  // 更新日期篩選條件（從右側 Tag 區塊的 input 抓值）
+  // ===== Date range filter =====
   function updateDateRangeFromInputs() {
     if (!rangeStartInput || !rangeEndInput) return;
 
@@ -261,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dateFilterStart = startVal;
     dateFilterEnd = endVal;
 
-    // 如果使用者填反（結束 < 開始），自動交換
+    // Auto-swap if user inputs reversed range
     if (dateFilterStart && dateFilterEnd && dateFilterEnd < dateFilterStart) {
       const tmp = dateFilterStart;
       dateFilterStart = dateFilterEnd;
@@ -274,13 +430,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCalendarGrid();
   }
 
-  // 監聽 input change
+  // input change
   if (rangeStartInput && rangeEndInput) {
     rangeStartInput.addEventListener("change", updateDateRangeFromInputs);
     rangeEndInput.addEventListener("change", updateDateRangeFromInputs);
   }
 
-  // 清除篩選
+  // clear filter
   if (clearRangeBtn) {
     clearRangeBtn.addEventListener("click", () => {
       dateFilterStart = null;
@@ -342,11 +498,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Event Detail Modal =====
   function openEventDetailModal(ev, dateStr) {
-    // ====== 標題：Sports 事件加上 icon ======
+    // ====== Sports events add icon ======
     let title = ev.title || "(No title)";
 
     if (ev.tag === "Sports Events") {
-      const icon = getSportIconForEvent(ev);  // 👈 使用剛剛建立的函數
+      const icon = getSportIconForEvent(ev); 
       title = `${icon} ${title}`;
     }
 
@@ -375,16 +531,19 @@ document.addEventListener("DOMContentLoaded", () => {
       detailLocationEl.textContent = "";
     }
 
-    // Description (支援超連結)
-    if (ev.description) {
-      detailDescEl.innerHTML = linkify(ev.description);
+    // Description / Details (support URL)
+    const desc = ev.details || ev.description || "";
+
+    if (desc) {
+      detailDescEl.innerHTML = linkify(desc);
       detailDescRow.style.display = "";
     } else {
       detailDescRow.style.display = "none";
       detailDescEl.innerHTML = "";
     }
 
-    // Sport type row（如果你有這一區）
+
+    // Sport type row
     if (ev.sport) {
       detailSportEl.textContent = ev.sport;
       detailSportRow.style.display = "";
@@ -460,6 +619,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Create Event Modal =====
   function openEventModal() {
+    // when opening modal via "Create New Event", always reset edit mode
+    editingEventId = null;
     // Default date = currently selected date (or today)
     eventDateInput.value = selectedDate || formatDate(today);
     eventTitleInput.value = "";
@@ -467,6 +628,13 @@ document.addEventListener("DOMContentLoaded", () => {
     eventEndInput.value = "";
     eventLocationInput.value = "";
     tagSelect.value = "Academic Calendar";
+
+    if (eventSportInput) eventSportInput.value = "";
+    if (eventDetailsInput) eventDetailsInput.value = "";
+
+    // Make sure Sport / Details visibility matches the current tag
+    updateSportFieldsVisibility();
+
     eventModalOverlay.classList.remove("hidden");
   }
 
@@ -483,8 +651,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Submit new event
-  eventForm.addEventListener("submit", (e) => {
+  // Handle create / edit event (user-created, stored on backend)
+  eventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const title = eventTitleInput.value.trim();
@@ -493,24 +661,88 @@ document.addEventListener("DOMContentLoaded", () => {
     const end = eventEndInput.value;
     const location = eventLocationInput.value.trim();
     const tag = tagSelect.value;
+    const sport = eventSportInput ? eventSportInput.value.trim() : "";
+    const details = eventDetailsInput ? eventDetailsInput.value.trim() : "";
 
     if (!title || !date) {
       alert("Title and Date are required.");
       return;
     }
 
-    userEvents.push({
-      id: Date.now(),
+    // Synchronize calendar view with the selected event date
+    const [y, m, d] = date.split("-").map(Number);
+    currentYear = y;
+    currentMonth = m - 1;   // Date 的 month 是 0-based
+    selectedDate = date;
+
+    // Data payload for backend
+    const payload = {
       title,
       date,
       start,
       end,
       location,
       tag,
-    });
+      sport: tag === "Sports Events" && sport ? sport : null,
+      details: details || null,
+    };
 
-    closeEventModal();
-    renderCalendarGrid();
+    try {
+      // ===== EDIT EXISTING EVENT =====
+      if (editingEventId) {
+        // 1) Delete the old event on backend
+        const deleteRes = await fetch(`${API_BASE_URL}/api/events/${editingEventId}`, {
+          method: "DELETE",
+        });
+        if (!deleteRes.ok) {
+          console.error("Failed to delete old event before update:", deleteRes.status);
+          alert("Failed to update event (delete step). Please try again.");
+          return;
+        }
+
+        // 2) Create the new event on backend
+        const createRes = await fetch(`${API_BASE_URL}/api/events`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!createRes.ok) {
+          console.error("Failed to recreate event:", createRes.status);
+          alert("Failed to update event (create step). Please try again.");
+          return;
+        }
+        const createdEvent = await createRes.json();
+
+        // 3) Update local array
+        const index = userEvents.findIndex((ev) => ev.id === editingEventId);
+        if (index !== -1) {
+          userEvents[index] = createdEvent;
+        }
+
+      // ===== CREATE NEW EVENT =====
+      } else {
+        const res = await fetch(`${API_BASE_URL}/api/events`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          console.error("Failed to create event:", res.status);
+          alert("Failed to create event. Please try again.");
+          return;
+        }
+        const createdEvent = await res.json();
+        userEvents.push(createdEvent);
+      }
+
+      closeEventModal();
+      editingEventId = null;
+      renderCalendarGrid();
+
+    } catch (err) {
+      console.error("Error creating/updating event:", err);
+      alert("Error while saving event. Please check console for details.");
+    }
   });
 
   // ===== Tag filter behavior =====
@@ -546,7 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pickedEl.textContent = selectedDate || "—";
   }
 
-  // 把所有事件合在一起（給搜尋 & getEventsForDate 共用）
+  // Merge all event sources into one unified array (shared by search and getEventsForDate)
   function getAllEventsArray() {
     return [
       ...holidays,
@@ -563,11 +795,10 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // 判斷某天是否落在 dateFilterStart ~ dateFilterEnd 之間
+  //  dateFilterStart ~ dateFilterEnd 
   function isDateInFilterRange(dateStr) {
-    // 沒有設定任何範圍 => 全部顯示
+    
     if (!dateFilterStart && !dateFilterEnd) return true;
-
     if (dateFilterStart && dateStr < dateFilterStart) return false;
     if (dateFilterEnd && dateStr > dateFilterEnd) return false;
 
@@ -642,24 +873,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Render events for the day
       eventsToDisplay.forEach((ev) => {
-        const li = document.createElement("li");
-        let text = ev.title || "";
-        if (ev.tag === "Sports Events") {
-          const icon = getSportIconForEvent(ev);
-          text = `${icon} ${text}`;
-        }
-        li.textContent = text;
-        li.classList.add("event-pill");
-
-        // Apply tag color class (e.g., "tag-holiday" for Holiday)
-        if (ev.tag) {
-          li.classList.add(
-            "tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase()
-          );
-        }
-
+        const li = createEventPill(ev);
         list.appendChild(li);
       });
+
 
       // If there are more events than the max limit, show a "+N more" option
       if (eventsForDay.length > MAX_EVENTS_PER_DAY && inRange) {
@@ -694,9 +911,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== 🔍 Search: 像 Google Calendar 的條列式結果 =====
-
-  // 顯示成「19 OCT 2025, SUN」這種格式
+  // ===== Search =====
   function formatSearchDateLabel(dateStr) {
     if (!dateStr) return "";
     const [y, m, d] = dateStr.split("-").map(Number);
@@ -709,7 +924,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function enterSearchMode(term, events) {
     if (!searchResultsEl) return;
 
-    // 隱藏月曆，顯示搜尋結果清單
+    // hide claendar
     weekdaysEl.classList.add("hidden");
     gridEl.classList.add("hidden");
     searchResultsEl.classList.remove("hidden");
@@ -907,14 +1122,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 像 Google Calendar 一樣顯示 description：
-  // - 保留原本每一行
-  // - 把網址變成可點的 <a>
-  // - 換行用 <br>
   function linkify(text) {
     if (!text) return "";
 
-    // 清掉 .NET Task 鬼字串（保險）
+    // clear .NET Task string
     text = text.replace(/System\.Threading\.Tasks\.Task`1\[System\.String\]/g, "");
 
     // 1. HTML escape
@@ -923,14 +1134,14 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // 2. 先把網址變 <a>，顯示完整 URL
+    // 2. url change to <a>
     const urlPattern = /(https?:\/\/\S+)/g;
     escaped = escaped.replace(urlPattern, (url) => {
       const safeUrl = url.replace(/"/g, "&quot;");
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
     });
 
-    // 3. 再把換行變成 <br>
+    // 3. change to <br>
     escaped = escaped.replace(/\n/g, "<br>");
 
     return escaped;
@@ -999,9 +1210,12 @@ document.addEventListener("DOMContentLoaded", () => {
   renderWeekdays();
   populateMonthYearSelects();
 
-  // 先畫一版（只有 holidays + weather + userEvents）
+  // Load user-created events from backend before first render
+  await loadUserEventsFromServer();
+
+  // Render initial calendar (holidays + weather + userEvents)
   renderCalendarGrid();
 
-  // 再非同步載入 Sports，載完會自己呼叫 renderCalendarGrid()
+  // Load sports events, then re-render when finished
   loadSportsEvents();
 });
