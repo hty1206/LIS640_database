@@ -286,12 +286,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Base pill style
     li.classList.add("event-pill");
 
-    // Tag color class (e.g. "tag-holiday", "tag-academic-calendar")
+    // Tag color class (example: tag-holiday, tag-academic-calendar, tag-weather)
     if (ev.tag) {
       li.classList.add("tag-" + ev.tag.replace(/\s+/g, "-").toLowerCase());
     }
 
-    // ✅ Only user-created events can be deleted
+    // === Temperature-based color (Weather only) ===
+    // If the event has avgt (average temperature), determine hot/cold class
+    if (ev.tag === "Weather" && ev.avgt !== undefined) {
+      const temp = parseFloat(ev.avgt);
+      if (!Number.isNaN(temp)) {
+        if (temp >= 80) {
+          li.classList.add("weather-hot");   // Hot day (red)
+        } else if (temp <= 32) {
+          li.classList.add("weather-cold");  // Cold day (blue)
+        }
+      }
+    }
+
+    // Delete button for user-created events
     if (ev.source === "user") {
       const deleteBtn = document.createElement("span");
       deleteBtn.textContent = "🗑 ";
@@ -299,7 +312,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       deleteBtn.title = "Delete this event";
 
       deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // prevent cell click
+        e.stopPropagation();
         deleteUserEventById(ev.id);
       });
 
@@ -797,7 +810,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   //  dateFilterStart ~ dateFilterEnd 
   function isDateInFilterRange(dateStr) {
-    
+
     if (!dateFilterStart && !dateFilterEnd) return true;
     if (dateFilterStart && dateStr < dateFilterStart) return false;
     if (dateFilterEnd && dateStr > dateFilterEnd) return false;
@@ -1078,6 +1091,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     return events;
+  }
+
+  // Determine temperature color class based on average temperature (avgt)
+  // Return "weather-hot", "weather-cold", or null
+  function getTempClassFromAvgt(avgt) {
+    if (avgt == null || avgt === "" || avgt === "M") return null;
+
+    const t = parseFloat(avgt);
+    if (Number.isNaN(t)) return null;
+
+    // Thresholds can be adjusted
+    if (t >= 80) {
+      return "weather-hot";   // Hot day
+    }
+    if (t <= 32) {
+      return "weather-cold";  // Cold day
+    }
+
+    return null;  // Normal temperature → no special color
   }
 
   function inferSportFromTitle(title) {
