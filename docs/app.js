@@ -123,6 +123,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   let weatherEvents = [];   // Weather events from ACIS APIs
   let sportsEvents = [];    // Sports events from sports_events.json
 
+  function normalizeDateString(d) {
+    if (!d) return null;
+
+    // If the format is already YYYY-MM-DD, return as-is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      return d;
+    }
+
+    // If the format is MM/DD/YYYY (e.g., 01/15/2029)
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
+      const [mm, dd, yyyy] = d.split("/");
+      // Convert to YYYY-MM-DD format
+      return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    }
+
+    // For any unexpected date formats, return original value for now
+    return d;
+  }
+
   // Load user-created events from backend API
   async function loadUserEventsFromServer() {
     try {
@@ -150,9 +169,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         academicEvents = [];
         return;
       }
+
       const data = await res.json();
-      academicEvents = Array.isArray(data) ? data : [];
+
+      academicEvents = (Array.isArray(data) ? data : []).map(ev => {
+        const normalizedDate    = normalizeDateString(ev.date);
+        const normalizedEndDate = normalizeDateString(ev.endDate);
+
+        return {
+          ...ev,
+          date: normalizedDate,
+          endDate: normalizedEndDate, 
+          tag: "Academic Calendar", 
+        };
+      });
+
       console.log("✅ Academic events loaded:", academicEvents.length);
+      console.log("Sample academic event after normalize:", academicEvents[0]);
     } catch (err) {
       console.error("Error loading academic events from server:", err);
       academicEvents = [];
