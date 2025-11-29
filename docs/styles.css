@@ -590,6 +590,12 @@ select:hover {
   background: rgba(255, 152, 0, 0.15);
 }
 
+/* Academic Calendar special color */
+.tag-academic-calendar {
+  border-left: 3px solid #68e0ca;   
+  background: rgba(255, 152, 0, 0.15);
+}
+
 /* Base color for Weather tag */
 .tag-weather {
   border-left: 2px solid var(--muted);

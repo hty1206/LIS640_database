@@ -650,6 +650,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const tagPart = ev.tag ? `[${ev.tag}] ` : "";
         let titleText = ev.title || "(No title)";
 
+        // Remove leading “[Academic] ” or any “[Something] ” pattern
+        titleText = titleText.replace(/^\[[^\]]+\]\s*/i, "");
+
+        // Sports icon
         if (ev.tag === "Sports Events") {
           const icon = getSportIconForEvent(ev);
           titleText = `${icon} ${titleText}`;
@@ -845,11 +849,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Merge all event sources into one unified array (shared by search and getEventsForDate)
   function getAllEventsArray() {
     return [
-      ...holidays,
       ...academicEvents,
       ...userEvents,
-      ...weatherEvents,
+      ...holidays,
       ...sportsEvents,
+      ...weatherEvents,
     ];
   }
 
