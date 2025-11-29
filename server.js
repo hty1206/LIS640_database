@@ -1,6 +1,6 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
+const mysql = require("mysql2/promise");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,40 +18,45 @@ app.use((req, res, next) => {
   next();
 });
 
-// Parse JSON body
+// Parse JSON request body
 app.use(express.json());
 
-// Serve static files from /docs when testing locally
+// Serve local static files for development/testing
 app.use(express.static(path.join(__dirname, "docs")));
 
-const EVENTS_FILE = path.join(__dirname, "events.json");
-
-// Read events.json safely
-function readEvents() {
-  try {
-    const raw = fs.readFileSync(EVENTS_FILE, "utf8");
-    return JSON.parse(raw);
-  } catch (err) {
-    return [];
-  }
-}
-
-// Write events.json safely
-function writeEvents(events) {
-  fs.writeFileSync(EVENTS_FILE, JSON.stringify(events, null, 2), "utf8");
-}
-
-// GET /api/events - return all user-created events
-app.get("/api/events", (req, res) => {
-  const events = readEvents();
-  res.json(events);
+// ===== MySQL connection pool (AWS RDS: Trans_Project) =====
+const pool = mysql.createPool({
+  host: process.env.AWS_DB_HOST,
+  user: process.env.AWS_DB_USER,
+  password: process.env.AWS_DB_PASSWORD,
+  database: process.env.AWS_DB_NAME,
+  port: process.env.AWS_DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
-// POST /api/events - create a new event
-app.post("/api/events", (req, res) => {
+/* ============================================================
+   1. USER-CREATED EVENTS (stored in Trans_Project.user_events)
+   ============================================================ */
+
+// GET /api/events — Return all user-created events
+app.get("/api/events", async (req, res) => {
   try {
-    // Safely read fields from body
+    const [rows] = await pool.query(
+      "SELECT * FROM user_events ORDER BY date, start"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Error in GET /api/events:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/events — Insert a new user-created event
+app.post("/api/events", async (req, res) => {
+  try {
     const body = req.body || {};
+
     const title = typeof body.title === "string" ? body.title : "";
     const date = typeof body.date === "string" ? body.date : "";
     const start = typeof body.start === "string" ? body.start : "";
@@ -61,7 +66,7 @@ app.post("/api/events", (req, res) => {
     const tag = typeof body.tag === "string" ? body.tag : "";
     const sport = typeof body.sport === "string" ? body.sport : null;
 
-    // Details may come as `details` or `description`
+    // Determine details/description field
     let finalDetails = null;
     if (typeof body.details === "string" && body.details.trim() !== "") {
       finalDetails = body.details.trim();
@@ -72,53 +77,110 @@ app.post("/api/events", (req, res) => {
       finalDetails = body.description.trim();
     }
 
+    // Required fields validation
     if (!title || !date || !tag) {
       return res
         .status(400)
         .json({ error: "title, date, and tag are required" });
     }
 
-    const events = readEvents();
+    // Additional validation for Sports Events
+    if (tag === "Sports Events" && (!sport || sport.trim() === "")) {
+      return res
+        .status(400)
+        .json({ error: "sport is required when tag is 'Sports Events'" });
+    }
 
-    const newEvent = {
-      id: Date.now(),
-      source: "user",
-      title,
-      date,
-      start,
-      end,
-      location,
-      tag,
-      sport,
-      details: finalDetails,
-    };
+    // Insert into user_events
+    const [result] = await pool.query(
+      `INSERT INTO user_events
+       (source, title, date, start, end, location, tag, sport, details)
+       VALUES ('user', ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, date, start, end, location, tag, sport, finalDetails]
+    );
 
-    events.push(newEvent);
-    writeEvents(events);
+    // Fetch the newly inserted row
+    const [rows] = await pool.query(
+      "SELECT * FROM user_events WHERE id = ?",
+      [result.insertId]
+    );
 
-    return res.status(201).json(newEvent);
+    return res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Error in POST /api/events:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// DELETE /api/events/:id - delete by id
-app.delete("/api/events/:id", (req, res) => {
+// DELETE /api/events/:id — Remove a single user-created event
+app.delete("/api/events/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const events = readEvents();
-  const index = events.findIndex((ev) => ev.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({ error: "Event not found" });
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: "Invalid id" });
   }
 
-  events.splice(index, 1);
-  writeEvents(events);
+  try {
+    const [result] = await pool.query(
+      "DELETE FROM user_events WHERE id = ?",
+      [id]
+    );
 
-  res.json({ success: true });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error in DELETE /api/events/:id:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
+/* ============================================================
+   2. ACADEMIC EVENTS (read-only from app_calendar_export)
+   Only return rows where Categories = 'Academic'
+   ============================================================ */
+
+// GET /api/academic-events — Read academic category events only
+app.get("/api/academic-events", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         Subject,
+         \`Start Date\`    AS startDate,
+         \`End Date\`      AS endDate,
+         \`All Day Event\` AS allDayEvent,
+         Description,
+         Categories
+       FROM app_calendar_export
+       WHERE Categories = 'Academic'
+       ORDER BY \`Start Date\``
+    );
+
+    // Normalize MySQL result format to frontend-friendly structure
+    const events = rows.map((r, idx) => ({
+      id: `academic-${idx + 1}`,
+      source: "academic",
+      title: r.Subject,
+      date: r.startDate,
+      start: null,
+      end: null,
+      location: null,
+      tag: "Academic calendar",
+      sport: null,
+      details: r.Description || null,
+      endDate: r.endDate,
+      allDayEvent: r.allDayEvent,
+    }));
+
+    res.json(events);
+  } catch (err) {
+    console.error("Error in GET /api/academic-events:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ===== Launch server =====
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
