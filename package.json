@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/hty1206/LIS640_database#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mysql2": "^3.11.3"
   }
 }
