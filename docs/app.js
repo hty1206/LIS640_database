@@ -117,11 +117,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentMonth = today.getMonth(); // 0-based
   let selectedDate = formatDate(today);
 
-  let holidays = [];      // from holidays.json
-  let userEvents = [];    // user-created events (localStorage)
-  let weatherEvents = []; // from ACIS weather APIs
-  let sportsEvents = [];  // from sports_events.json
-  let editingEventId = null;
+  let holidays = [];        // Holiday events from holidays.json
+  let academicEvents = [];  // Academic events from backend (MySQL)
+  let userEvents = [];      // User-created events from backend
+  let weatherEvents = [];   // Weather events from ACIS APIs
+  let sportsEvents = [];    // Sports events from sports_events.json
 
   // Load user-created events from backend API
   async function loadUserEventsFromServer() {
@@ -138,6 +138,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (err) {
       console.error("Error loading user events from server:", err);
       userEvents = [];
+    }
+  }
+
+  // Load academic events (Categories='Academic') from backend API
+  async function loadAcademicEventsFromServer() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/academic-events`);
+      if (!res.ok) {
+        console.error("Failed to fetch academic events:", res.status);
+        academicEvents = [];
+        return;
+      }
+      const data = await res.json();
+      academicEvents = Array.isArray(data) ? data : [];
+      console.log("✅ Academic events loaded:", academicEvents.length);
+    } catch (err) {
+      console.error("Error loading academic events from server:", err);
+      academicEvents = [];
     }
   }
 
@@ -795,6 +813,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function getAllEventsArray() {
     return [
       ...holidays,
+      ...academicEvents,
       ...userEvents,
       ...weatherEvents,
       ...sportsEvents,
@@ -1242,10 +1261,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderWeekdays();
   populateMonthYearSelects();
 
-  // Load user-created events from backend before first render
+  // Load user events + academic events from backend before first render
   await loadUserEventsFromServer();
+  await loadAcademicEventsFromServer();
 
-  // Render initial calendar (holidays + weather + userEvents)
+  // Render initial calendar (holidays + academic + weather + userEvents)
   renderCalendarGrid();
 
   // Load sports events, then re-render when finished
