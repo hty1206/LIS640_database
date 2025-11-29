@@ -166,7 +166,7 @@ app.get("/api/academic-events", async (req, res) => {
       start: null,
       end: null,
       location: null,
-      tag: "Academic calendar",
+      tag: "Academic Calendar",
       sport: null,
       details: r.Description || null,
       endDate: r.endDate,
