@@ -1087,7 +1087,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ===== Holidays data (holidays.json) =====
-  fetch("holidays.json")
+  fetch("./data/holidays.json")
     .then((res) => res.json())
     .then((data) => {
       holidays = data || [];
@@ -1191,7 +1191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===== Sports Events data =====
   async function loadSportsEvents() {
     try {
-      const res = await fetch("./sports_events.json");
+      const res = await fetch("./data/sports_events.json");
       const data = await res.json();
 
       sportsEvents = data.map(ev => ({

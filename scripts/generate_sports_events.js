@@ -1,7 +1,6 @@
-// scripts/generate_sports_events.js
-
 const fs = require("fs");
 const https = require("https");
+const path = require("path");
 
 const ICS_URL =
   "https://calendar.google.com/calendar/ical/7obkojq4b78kbqg9v0l8s2s6kcg9usfk%40import.calendar.google.com/public/basic.ics";
@@ -181,13 +180,16 @@ async function main() {
 
   }
 
+  const outputPath = path.join(__dirname, "..", "docs", "data", "sports_events.json");
+
   fs.writeFileSync(
-    "sports_events.json",
+    outputPath,
     JSON.stringify(events, null, 2),
     "utf-8"
   );
-  console.log(`Generated ${events.length} sports events -> sports_events.json`);
+  console.log(`Generated ${events.length} sports events -> ${outputPath}`);
 }
+
 
 main().catch((err) => {
   console.error(err);
