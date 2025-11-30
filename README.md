@@ -1,6 +1,31 @@
 # 📘 Transportation Services Calendar & Database
-Hello! This is a repository for the Transportation Services database and event calendar.
-This repository contains the Transportation Services event calendar and accompanying MySQL database.
+<p align="center">
+
+  <!-- Frontend -->
+  <a href="https://hty1206.github.io/LIS640_database/docs/">
+    <img src="https://img.shields.io/badge/Frontend-GitHub%20Pages-blue?logo=github" />
+  </a>
+
+  <!-- Backend -->
+  <a href="https://data-tagging-project.onrender.com">
+    <img src="https://img.shields.io/badge/Backend-Render-green?logo=render" />
+  </a>
+
+  <!-- CI/CD Status -->
+  <a href="https://github.com/hty1206/LIS640_database/actions">
+    <img src="https://github.com/hty1206/LIS640_database/actions/workflows/update_sports.yml/badge.svg" />
+  </a>
+
+  <!-- Node.js -->
+  <img src="https://img.shields.io/badge/Node.js-20.x-success?logo=node.js" />
+
+  <!-- MySQL -->
+  <img src="https://img.shields.io/badge/Database-MySQL-4479A1?logo=mysql&logoColor=white" />
+
+</p>
+
+Hello! This is a repository for the Transportation Services database and event calendar.  
+This repository contains the Transportation Services event calendar and accompanying MySQL database.  
 The system integrates academic events, sports events, weather data, holiday data, and user-created events into a unified calendar interface.
 
 ---
