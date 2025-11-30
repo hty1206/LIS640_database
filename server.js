@@ -57,16 +57,21 @@ app.post("/api/events", async (req, res) => {
   try {
     const body = req.body || {};
 
-    const title = typeof body.title === "string" ? body.title : "";
-    const date = typeof body.date === "string" ? body.date : "";
-    const start = typeof body.start === "string" ? body.start : "";
-    const end = typeof body.end === "string" ? body.end : "";
-    const location =
-      typeof body.location === "string" ? body.location : "";
-    const tag = typeof body.tag === "string" ? body.tag : "";
-    const sport = typeof body.sport === "string" ? body.sport : null;
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    const date  = typeof body.date  === "string" ? body.date.trim()  : "";
+    const tag   = typeof body.tag   === "string" ? body.tag.trim()   : "";
 
-    // Determine details/description field
+    // 允許空 → 空字串轉成 null
+    const startRaw    = typeof body.start    === "string" ? body.start.trim()    : "";
+    const endRaw      = typeof body.end      === "string" ? body.end.trim()      : "";
+    const locationRaw = typeof body.location === "string" ? body.location.trim() : "";
+    const sportRaw    = typeof body.sport    === "string" ? body.sport.trim()    : "";
+
+    const start    = startRaw    || null;
+    const end      = endRaw      || null;
+    const location = locationRaw || null;
+    const sport    = sportRaw    || null;
+
     let finalDetails = null;
     if (typeof body.details === "string" && body.details.trim() !== "") {
       finalDetails = body.details.trim();
@@ -77,21 +82,14 @@ app.post("/api/events", async (req, res) => {
       finalDetails = body.description.trim();
     }
 
-    // Required fields validation
     if (!title || !date || !tag) {
       return res
         .status(400)
         .json({ error: "title, date, and tag are required" });
     }
 
-    // Additional validation for Sports Events
-    if (tag === "Sports Events" && (!sport || sport.trim() === "")) {
-      return res
-        .status(400)
-        .json({ error: "sport is required when tag is 'Sports Events'" });
-    }
+    // if (tag === "Sports Events" && (!sport || sport.trim() === "")) { ... }
 
-    // Insert into user_events
     const [result] = await pool.query(
       `INSERT INTO user_events
        (source, title, date, start, end, location, tag, sport, details)
@@ -99,7 +97,6 @@ app.post("/api/events", async (req, res) => {
       [title, date, start, end, location, tag, sport, finalDetails]
     );
 
-    // Fetch the newly inserted row
     const [rows] = await pool.query(
       "SELECT * FROM user_events WHERE id = ?",
       [result.insertId]
