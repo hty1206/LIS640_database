@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const sportOnlyFields = document.querySelectorAll('.sport-only');
 
   /**
-   * Controls visibility of Sport and Details fields
+   * Controls visibility of Sport fields
    * - If tag = "Sports Events" → show fields
    * - Otherwise → hide fields and clear values
    */
@@ -95,10 +95,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // If not Sports Events, clear the optional inputs
     if (!isSports) {
       const sportInput = document.getElementById('eventSport');
-      const detailsInput = document.getElementById('eventDetails');
 
       if (sportInput) sportInput.value = '';
-      if (detailsInput) detailsInput.value = '';
     }
   }
 
@@ -240,7 +238,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     renderCalendarGrid(); // Re-render calendar with the new month and year
-    titleText.textContent = `${monthNames[currentMonth]} ${currentYear}`; // Update the month/year display
     monthSelect.value = currentMonth; // Update the month dropdown
     yearSelect.value = currentYear; // Update the year dropdown
   });
@@ -255,7 +252,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     renderCalendarGrid(); // Re-render calendar with the new month and year
-    titleText.textContent = `${monthNames[currentMonth]} ${currentYear}`; // Update the month/year display
     monthSelect.value = currentMonth; // Update the month dropdown
     yearSelect.value = currentYear; // Update the year dropdown
   });
@@ -700,18 +696,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ===== Create Event Modal =====
   function openEventModal() {
-    // when opening modal via "Create New Event", always reset edit mode
-    editingEventId = null;
     // Default date = currently selected date (or today)
     eventDateInput.value = selectedDate || formatDate(today);
     eventTitleInput.value = "";
     eventStartInput.value = "";
     eventEndInput.value = "";
     eventLocationInput.value = "";
+    eventDetailsInput.value = "";
     tagSelect.value = "Academic Calendar";
 
     if (eventSportInput) eventSportInput.value = "";
-    if (eventDetailsInput) eventDetailsInput.value = "";
 
     // Make sure Sport / Details visibility matches the current tag
     updateSportFieldsVisibility();
@@ -732,7 +726,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Handle create / edit event (user-created, stored on backend)
   eventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -741,9 +734,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const start = eventStartInput.value;
     const end = eventEndInput.value;
     const location = eventLocationInput.value.trim();
+    const details = eventDetailsInput.value.trim();
     const tag = tagSelect.value;
     const sport = eventSportInput ? eventSportInput.value.trim() : "";
-    const details = eventDetailsInput ? eventDetailsInput.value.trim() : "";
 
     if (!title || !date) {
       alert("Title and Date are required.");
@@ -753,10 +746,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Synchronize calendar view with the selected event date
     const [y, m, d] = date.split("-").map(Number);
     currentYear = y;
-    currentMonth = m - 1;   // Date 的 month 是 0-based
+    currentMonth = m - 1;   
     selectedDate = date;
 
-    // Data payload for backend
     const payload = {
       title,
       date,
@@ -769,70 +761,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      // ===== EDIT EXISTING EVENT =====
-      if (editingEventId) {
-        // 1) Delete the old event on backend
-        const deleteRes = await fetch(`${API_BASE_URL}/api/events/${editingEventId}`, {
-          method: "DELETE",
-        });
-        if (!deleteRes.ok) {
-          console.error("Failed to delete old event before update:", deleteRes.status);
-          alert("Failed to update event (delete step). Please try again.");
-          return;
-        }
-
-        // 2) Create the new event on backend
-        const createRes = await fetch(`${API_BASE_URL}/api/events`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!createRes.ok) {
-          console.error("Failed to recreate event:", createRes.status);
-          alert("Failed to update event (create step). Please try again.");
-          return;
-        }
-        const createdEvent = await createRes.json();
-        const normalizedEvent = {
-          ...createdEvent,
-          date: normalizeDateString(createdEvent.date),
-        };
-
-        // 3) Update local array
-        const index = userEvents.findIndex((ev) => ev.id === editingEventId);
-        if (index !== -1) {
-          userEvents[index] = normalizedEvent;
-        }
-
-      // ===== CREATE NEW EVENT =====
-      } else {
-        const res = await fetch(`${API_BASE_URL}/api/events`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          console.error("Failed to create event:", res.status);
-          alert("Failed to create event. Please try again.");
-          return;
-        }
-        const createdEvent = await res.json();
-        const normalizedEvent = {
-          ...createdEvent,
-          date: normalizeDateString(createdEvent.date),
-        };
-        userEvents.push(normalizedEvent);
+      // ★★★ 單純新增事件 ★★★
+      const res = await fetch(`${API_BASE_URL}/api/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        console.error("Failed to create event:", res.status);
+        alert("Failed to create event. Please try again.");
+        return;
       }
 
+      const createdEvent = await res.json();
+      const normalizedEvent = {
+        ...createdEvent,
+        date: normalizeDateString(createdEvent.date),
+      };
+      userEvents.push(normalizedEvent);
+
       closeEventModal();
-      editingEventId = null;
       renderCalendarGrid();
 
     } catch (err) {
-      console.error("Error creating/updating event:", err);
+      console.error("Error creating event:", err);
       alert("Error while saving event. Please check console for details.");
     }
   });
+
 
   // ===== Tag filter behavior =====
   tagFilterInputs.forEach((input) => {

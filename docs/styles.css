@@ -596,6 +596,18 @@ select:hover {
   background: #a3d1d162;
 }
 
+/* Constructions Closures special color */
+.tag-construction-closures {
+  border-left: 3px solid #CF9E9E;   
+  background: #cf9e9ea3;
+}
+
+/* School Closures special color */
+.tag-school-closures {
+  border-left: 3px solid #CF9E9E;   
+  background: #cf9e9ea3;
+}
+
 /* Base color for Weather tag */
 .tag-weather {
   border-left: 2px solid var(--muted);
