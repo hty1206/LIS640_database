@@ -592,8 +592,8 @@ select:hover {
 
 /* Academic Calendar special color */
 .tag-academic-calendar {
-  border-left: 3px solid #68e0ca;   
-  background: rgba(255, 152, 0, 0.15);
+  border-left: 3px solid #A3D1D1;   
+  background: #a3d1d162;
 }
 
 /* Base color for Weather tag */
