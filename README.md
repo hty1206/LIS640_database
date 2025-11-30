@@ -75,9 +75,7 @@ It integrates academic events, sports events, weather data, holiday data, and us
 
 # 🌐 Live Demo (Frontend)
 
-🔗 [https://hty1206.github.io/LIS640_database/docs/](https://hty1206.github.io/LIS640_database/docs/)
-
----
+🔗 [https://hty1206.github.io/LIS640_database/](https://hty1206.github.io/LIS640_database/)
 
 # 🗄 Backend API (Render)
 
