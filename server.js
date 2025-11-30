@@ -184,3 +184,4 @@ app.get("/api/academic-events", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
+
