@@ -1067,15 +1067,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    const termLower = term.toLowerCase();
     const allEvents = getAllEventsArray();
-    const filteredEvents = allEvents.filter(ev =>
-      ev.title.toLowerCase().includes(term.toLowerCase())
-    );
+
+    const filteredEvents = allEvents.filter((ev) => {
+      const title     = (ev.title || "").toLowerCase();
+      const details   = (ev.details || ev.description || "").toLowerCase(); // 支援 details / description
+      const location  = (ev.location || "").toLowerCase();
+      const tag       = (ev.tag || "").toLowerCase();
+      const sport     = (ev.sport || "").toLowerCase();
+
+      return (
+        title.includes(termLower) ||
+        details.includes(termLower) ||
+        location.includes(termLower) ||
+        tag.includes(termLower) ||
+        sport.includes(termLower)
+      );
+    });
 
     enterSearchMode(term, filteredEvents);
   }
 
-
+  
   if (eventSearchButton) {
     eventSearchButton.addEventListener("click", handleSearch);
   }
