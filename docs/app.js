@@ -123,22 +123,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   let weatherEvents = [];   // Weather events from ACIS APIs
   let sportsEvents = [];    // Sports events from sports_events.json
 
+  // Normalize various date formats into "YYYY-MM-DD"
+  // - ISO format like "2025-11-29T00:00:00.000Z" → "2025-11-29"
+  // - Slash format "01/15/2029" → "2029-01-15"
+  // - Already correct "2025-11-29" → unchanged
   function normalizeDateString(d) {
     if (!d) return null;
 
-    // If the format is already YYYY-MM-DD, return as-is
-    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-      return d;
+    // If string starts with YYYY-MM-DD, extract first 10 chars
+    const isoMatch = d.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) {
+      return isoMatch[1];   // Example: "2025-11-29T00:00:00.000Z" → "2025-11-29"
     }
 
-    // If the format is MM/DD/YYYY (e.g., 01/15/2029)
+    // Handle MM/DD/YYYY format
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
       const [mm, dd, yyyy] = d.split("/");
-      // Convert to YYYY-MM-DD format
-      return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+      return `${yyyy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}`;
     }
 
-    // For any unexpected date formats, return original value for now
+    // Otherwise return as-is
     return d;
   }
 
@@ -151,11 +155,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         userEvents = [];
         return;
       }
+
       const data = await res.json();
-      userEvents = Array.isArray(data) ? data : [];
+
+      // Normalize date for each event
+      userEvents = (Array.isArray(data) ? data : []).map(ev => ({
+        ...ev,
+        date: normalizeDateString(ev.date),  // Convert "2025-11-29T00:00:00.000Z" → "2025-11-29"
+      }));
+
       console.log("✅ User events loaded:", userEvents.length);
+      console.log("Example normalized event:", userEvents[0]);
+
     } catch (err) {
-      console.error("Error loading user events from server:", err);
+      console.error("Error loading user events:", err);
       userEvents = [];
     }
   }
@@ -780,11 +793,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
         const createdEvent = await createRes.json();
+        const normalizedEvent = {
+          ...createdEvent,
+          date: normalizeDateString(createdEvent.date),
+        };
 
         // 3) Update local array
         const index = userEvents.findIndex((ev) => ev.id === editingEventId);
         if (index !== -1) {
-          userEvents[index] = createdEvent;
+          userEvents[index] = normalizedEvent;
         }
 
       // ===== CREATE NEW EVENT =====
@@ -800,7 +817,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
         const createdEvent = await res.json();
-        userEvents.push(createdEvent);
+        const normalizedEvent = {
+          ...createdEvent,
+          date: normalizeDateString(createdEvent.date),
+        };
+        userEvents.push(normalizedEvent);
       }
 
       closeEventModal();
