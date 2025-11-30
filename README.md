@@ -1,21 +1,152 @@
+# 📘 Transportation Services Calendar & Database
 Hello! This is a repository for the Transportation Services database and event calendar.
+This repository contains the Transportation Services event calendar and accompanying MySQL database.
+The system integrates academic events, sports events, weather data, holiday data, and user-created events into a unified calendar interface.
 
-The calendar web application can be accessed here:
-https://hty1206.github.io/LIS640_database/
+---
 
-The database was created in MySQL. To create your own copy of it, follow these steps:
-1. Open MySQL Workbench. 
-2. Create a new instance or open the desired instance.
-3. Go to File > Open SQL Script, then navigate to this directory's "db" folder and select "LIS640_full2.sql".
-4. Execute the entire script with Ctrl+Shift+Enter or the first lightning bolt button at the top. You must not select any code in the file, or MySQL will attempt to only run the selection.
-5. Refresh the schema on the left. You should see a number of tables on the left and a lot of outputs on the bottom.
+## 🌐 Live Demo (Frontend)
 
-For a test query, try the sample below.
+**GitHub Pages (static site)**
+🔗 [https://hty1206.github.io/LIS640_database/](https://hty1206.github.io/LIS640_database/)
 
-Test Query #1
-This query attempts to show all events that occured in January 2022 where there was recorded precipitation on that day.
+---
 
-select EventStartDate, EventName, EventDesc, WeatherPrecip, WeatherAvgT from events
-join weather on events.EventStartDate = weather.WeatherDate
+## 🗄 Backend API (Render)
+
+**Render Node.js API service**
+🔗 [https://data-tagging-project.onrender.com](https://data-tagging-project.onrender.com)
+
+The backend handles user-created events, academic calendar queries, and connects to an AWS RDS MySQL database.
+
+---
+
+# 🧩 Features
+
+* 🎓 Academic calendar integration
+* 🏈 Sports events auto-updated daily from Google Calendar ICS via GitHub Actions
+* 🌧 Weather data integration
+* 🎉 Holiday JSON dataset
+* 📝 User-created event CRUD (create/delete)
+* 🔌 Node.js backend on Render + AWS MySQL
+* 🖥 Static frontend on GitHub Pages
+* 🔄 CI/CD pipeline for automated data refresh
+
+---
+
+# 🏗 System Architecture
+
+```
+GitHub Pages (Frontend)
+        |
+        v
+Render Node.js Backend → AWS RDS MySQL
+        ^
+        |
+GitHub Actions (ICS → JSON daily update)
+```
+
+---
+
+# 📂 Project Structure
+
+```
+LIS640_database/
+├── db/                     # SQL schema
+├── docs/                   # Frontend (GitHub Pages)
+│   ├── index.html
+│   ├── app.js
+│   ├── styles.css
+│   └── data/
+│       ├── sports_events.json
+│       └── holidays.json
+├── scripts/
+│   └── generate_sports_events.js
+├── server.js               # Backend API (Render)
+├── .github/workflows/      # CI/CD pipeline
+└── README.md
+```
+
+---
+
+# 🛢 Creating Your Own MySQL Database (Manual Setup)
+
+To build your own copy of the database:
+
+1. Open **MySQL Workbench**
+2. Create a new MySQL instance or open an existing one
+3. Go to **File → Open SQL Script**
+4. Navigate to the `db/` folder of this repository
+5. Select **LIS640_full2.sql**
+6. Run the entire script using:
+
+   * `Ctrl + Shift + Enter` (Windows)
+   * or click the **lightning bolt** icon
+     ⚠ **Do NOT highlight/select any SQL** before running. If you do, Workbench will only run the selected portion.
+7. Refresh your schema panel. You should now see all tables created.
+
+---
+
+# 🔍 Test Query Example
+
+This sample query retrieves all events in **January 2022** that had measurable precipitation:
+
+```sql
+select EventStartDate, EventName, EventDesc, WeatherPrecip, WeatherAvgT
+from events
+join weather
+     on events.EventStartDate = weather.WeatherDate
 where EventStartDate between "2022-01-01" and "2022-01-31"
-and WeatherPrecip > 0;
+  and WeatherPrecip > 0;
+```
+
+---
+
+# 🔄 Automated Data Pipeline (GitHub Actions)
+
+Daily at 09:00 UTC:
+
+```
+1. Fetch ICS from Google Calendar
+2. Parse + clean ICS fields
+3. Write → docs/data/sports_events.json
+4. Auto-commit only if the dataset has changed
+```
+
+Workflow file:
+`/.github/workflows/update_sports.yml`
+
+---
+
+# ⚙️ Backend API Endpoints
+
+### User Events
+
+```
+GET    /api/events        → Get all user-created events
+POST   /api/events        → Insert new event
+DELETE /api/events/:id    → Delete event
+```
+
+### Academic Calendar
+
+```
+GET /api/academic-events  → Fetch academic events (Categories='Academic')
+```
+
+---
+
+# ⭐ Key Features Summary
+
+* Unified multi-source event calendar
+* Real-time MySQL-backed user event storage
+* Fully automated sports event ingestion
+* Clear frontend-backend separation
+* Cloud-hosted REST API
+* Clean, modular project structure
+
+---
+
+# 📜 License
+
+For academic and educational use only.
