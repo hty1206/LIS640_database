@@ -126,20 +126,27 @@ GitHub Actions (ICS → JSON daily update)
 
 ```
 LIS640_database/
-├── db/                     # SQL schema files
-├── docs/                   # Frontend for GitHub Pages
+│
+├── db/                     # SQL schemas
+├── dbt_project/            # dbt transformations
+├── docs/                   # GitHub Pages frontend
 │   ├── index.html
 │   ├── app.js
 │   ├── styles.css
 │   └── data/
 │       ├── sports_events.json
 │       └── holidays.json
-├── scripts/
-│   └── generate_sports_events.js  # ICS → JSON ETL
-├── server.js               # Node.js backend (Render)
-├── .github/workflows/
-│   └── update_sports.yml  # CI/CD pipeline
-└── README.md
+│
+├── scripts/                # Automation scripts
+│   └── generate_sports_events.js
+│
+├── server.js               # Render backend API
+├── package.json
+├── .github/
+│   └── workflows/
+│       └── update_sports.yml
+│
+└── README.md               # Project documentation
 ```
 
 ---
