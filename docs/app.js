@@ -761,7 +761,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      // ★★★ 單純新增事件 ★★★
       const res = await fetch(`${API_BASE_URL}/api/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -769,7 +768,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       if (!res.ok) {
         console.error("Failed to create event:", res.status);
-        alert("Failed to create event. Please try again.");
+
+        if (tag === "Sports Events" && (!start || !end)) {
+          alert("Please enter BOTH start and end time for Sports Events.");
+        } else {
+          alert("Failed to create event. Please try again.");
+        }
+
         return;
       }
 
