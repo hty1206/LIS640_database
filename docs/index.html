@@ -194,35 +194,61 @@
         </div>
 
         <div class="tableau-frame">
-          <div class='tableauPlaceholder' id='viz1763417787003' style='position: relative'>
+          <!-- ====== Tableau Weather Overview Embed ====== -->
+        <div id="view-tableau" style="max-width:1400px; margin:0 auto;">
+          <div class="tableauPlaceholder" id="vizWeather" style="position: relative">
             <noscript>
-              <a href='https:&#47;&#47;www.tableau.com&#47;'>
-                <img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;RT&#47;RTKHRM4B9&#47;1_rss.png' style='border: none' />
+              <a href="#">
+                <img alt="Weather Overview"
+                    src="https://public.tableau.com/static/images/Da/DataTaggingProject-Weather/WeatherOverview/1.png"
+                    style="border:none;" />
               </a>
             </noscript>
-            <object class='tableauViz'  style='display:none;'>
-              <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
-              <param name='embed_code_version' value='3' /> 
-              <param name='path' value='shared&#47;RTKHRM4B9' /> 
-              <param name='toolbar' value='yes' />
-              <param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;RT&#47;RTKHRM4B9&#47;1.png' /> 
-              <param name='animate_transition' value='yes' />
-              <param name='display_static_image' value='yes' />
-              <param name='display_spinner' value='yes' />
-              <param name='display_overlay' value='yes' />
-              <param name='display_count' value='yes' />
-              <param name='tabs' value='no' />
+
+            <object class="tableauViz" style="display:none;">
+              <param name="host_url" value="https%3A%2F%2Fpublic.tableau.com%2F" />
+              <param name="embed_code_version" value="3" />
+              <param name="path" value="views/DataTaggingProject-Weather/WeatherOverview" />
+              <param name="toolbar" value="yes" />
+              <param name="static_image" 
+                    value="https://public.tableau.com/static/images/Da/DataTaggingProject-Weather/WeatherOverview/1.png" />
+              <param name="animate_transition" value="yes" />
+              <param name="display_static_image" value="yes" />
+              <param name="display_spinner" value="yes" />
+              <param name="display_overlay" value="yes" />
+              <param name="display_count" value="yes" />
+              <param name="language" value="en-US" />
             </object>
-          </div>                
-          <script type='text/javascript'>                    
-            var divElement = document.getElementById('viz1763417787003');                    
-            var vizElement = divElement.getElementsByTagName('object')[0];                    
-            vizElement.style.width='800px';vizElement.style.height='597px';                    
-            var scriptElement = document.createElement('script');                    
-            scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    
-            vizElement.parentNode.insertBefore(scriptElement, vizElement);                
-          </script>
+          </div>
         </div>
+
+        <script>
+          (function() {
+            var div = document.getElementById("vizWeather");
+            var vizObj = div.getElementsByTagName("object")[0];
+
+            function getWidth() {
+              var w = div.offsetWidth;
+              return (w && w > 0) ? w : 1200; 
+            }
+
+            var width = getWidth();
+            var height = width * 0.60;
+
+            vizObj.style.width = width + 'px';
+            vizObj.style.height = height + 'px';
+
+            var script = document.createElement("script");
+            script.src = "https://public.tableau.com/javascripts/api/viz_v1.js";
+            vizObj.parentNode.insertBefore(script, vizObj);
+
+            window.addEventListener("resize", function() {
+              var newWidth = getWidth();
+              vizObj.style.width = newWidth + 'px';
+              vizObj.style.height = (newWidth * 0.75) + 'px';
+            });
+          })();
+        </script>
       </section>
     </main>
 
