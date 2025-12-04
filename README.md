@@ -79,7 +79,9 @@ It integrates academic events, sports events, weather data, holiday data, and us
 
 # 🗄 Backend API (Render)
 
-🔗 [https://data-tagging-project.onrender.com](https://data-tagging-project.onrender.com)
+🔗 [https://data-tagging-project.onrender.com](https://data-tagging-project.onrender.com)  
+⚠️ Note: Adding or deleting events is only available through the Render backend API (https://data-tagging-project.onrender.com). This is the only link that saves data to the cloud database.  
+The GitHub Pages frontend is for interface demonstration only.
 
 ---
 
