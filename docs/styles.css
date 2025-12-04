@@ -595,6 +595,7 @@ select:hover {
 .tag-academic-calendar {
   border-left: 3px solid #A3D1D1;   
   background: #a3d1d162;
+  color: #051433;
 }
 
 /* Constructions Closures special color */
