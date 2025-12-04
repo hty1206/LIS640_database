@@ -433,7 +433,7 @@ body {
 }
 
 .detail-description a {
-  color: #1a73e8;
+  color: var(--accent);
   text-decoration: underline;
   word-break: break-all;
 }
