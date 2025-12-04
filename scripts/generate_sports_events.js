@@ -25,16 +25,11 @@ function pad(n) {
   return n < 10 ? "0" + n : String(n);
 }
 
-/**
- * 解析 ICS 的日期時間字串
- * - 若是全日事件：20251122  -> { date: "2025-11-22", time: null }
- * - 若是有時間，且以 Z 結尾：當成 UTC，轉成 America/Chicago
- * - 若是無 Z：當成本來就是 America/Chicago 本地時間
- */
+
 function parseIcsDateTime(raw) {
   if (!raw) return { date: null, time: null };
 
-  // 全日事件（沒有時間）
+
   if (/^\d{8}$/.test(raw)) {
     const y = raw.slice(0, 4);
     const m = raw.slice(4, 6);
@@ -52,14 +47,14 @@ function parseIcsDateTime(raw) {
 
   let dateObj;
   if (isUtc) {
-    // 以 UTC 建立
+
     dateObj = new Date(Date.UTC(y, m - 1, d, hh, mm));
   } else {
-    // 當成本來就是 America/Chicago 本地時間
+
     dateObj = new Date(y, m - 1, d, hh, mm);
   }
 
-  // 轉成 America/Chicago 本地時間
+
   const local = new Date(
     dateObj.toLocaleString("en-US", { timeZone: "America/Chicago" })
   );
@@ -72,7 +67,7 @@ function parseIcsDateTime(raw) {
 
   const dateStr = `${ly}-${pad(lm + 1)}-${pad(ld)}`;
 
-  // 轉成 12 小時制字串，如 6:30pm
+
   let suffix = lhh >= 12 ? "pm" : "am";
   let displayHour = lhh % 12;
   if (displayHour === 0) displayHour = 12;
@@ -85,7 +80,7 @@ async function main() {
   console.log("Fetching ICS from Google Calendar...");
   const icsText = await fetchText(ICS_URL);
 
-  // 展開續行（被折行的行前面會有空白）
+
   const rawLines = icsText.split(/\r?\n/);
   const unfolded = [];
   for (const line of rawLines) {
@@ -123,7 +118,6 @@ async function main() {
 
       if (line.startsWith("LOCATION:")) {
         location = line.replace("LOCATION:", "").trim();
-        // 把 "\," 換回正常逗號 + 空白
         location = location.replace(/\\,/g, ", ").replace(/\\n/g, " ");
       }
 
@@ -141,39 +135,33 @@ async function main() {
     if (dateStr && summary) {
       let descText = description || "";
 
-      // ICS 的 \n 換成真實的換行
       descText = descText.replace(/\\n/g, "\n");
 
-      // 把 &amp; 換回 &（Google Calendar 常會這樣 escape）
       descText = descText.replace(/&amp;/g, "&");
 
-      // 🔧 1) 清掉那個超怪的 .NET Task 字串
       descText = descText.replace(
         /System\.Threading\.Tasks\.Task`1\[System\.String\]/g,
         ""
       );
 
-      // 🔧 2) 若 description 第一行跟 summary 一樣，就拿掉避免重複
       const lines = descText.split("\n").map(l => l.trim());
       if (lines.length > 0) {
         const firstLine = lines[0];
-        // 有些情況 SUMMARY = "[W] ...", description 第一行也是這個
         if (firstLine === summary || firstLine.startsWith(summary)) {
           lines.shift();
         }
       }
       descText = lines.join("\n");
 
-      // 🔧 3) 把連續很多空行縮成最多一個空行
       descText = descText.replace(/\n{2,}/g, "\n\n").trim();
 
       events.push({
-        date: dateStr,          // 已轉成 America/Chicago 日期
+        date: dateStr,          
         title: summary,
         location: location || "",
-        start: startTime,       // 已轉成當地時間（例如 7:00pm）
-        end: endTime,           // 例如 10:00pm
-        description: descText,  // 多行文字，前端再 linkify
+        start: startTime,       
+        end: endTime,           
+        description: descText,  
         tag: "Sports Events",
       });
     }
