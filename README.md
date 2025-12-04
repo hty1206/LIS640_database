@@ -80,7 +80,8 @@ It integrates academic events, sports events, weather data, holiday data, and us
 # 🗄 Backend API (Render)
 
 🔗 [https://data-tagging-project.onrender.com](https://data-tagging-project.onrender.com)  
-⚠️ Note: Adding or deleting events is only available through the Render backend API (https://data-tagging-project.onrender.com). This is the only link that saves data to the cloud database.  
+⚠️ Note: Adding or deleting events is only available through the Render backend API (https://data-tagging-project.onrender.com).  
+This is the only link that saves data to the cloud database.  
 The GitHub Pages frontend is for interface demonstration only.
 
 ---
@@ -225,29 +226,6 @@ DELETE /api/events/:id
 
 ```
 GET    /api/academic-events
-```
-
----
-
-# 🧪 Local Development
-
-### Start backend
-
-```bash
-npm install
-node server.js
-```
-
-### Regenerate sports events JSON
-
-```bash
-node scripts/generate_sports_events.js
-```
-
-### Preview frontend locally
-
-```
-open docs/index.html  # macOS
 ```
 
 ---
