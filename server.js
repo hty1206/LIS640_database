@@ -61,7 +61,6 @@ app.post("/api/events", async (req, res) => {
     const date  = typeof body.date  === "string" ? body.date.trim()  : "";
     const tag   = typeof body.tag   === "string" ? body.tag.trim()   : "";
 
-    // 允許空 → 空字串轉成 null
     const startRaw    = typeof body.start    === "string" ? body.start.trim()    : "";
     const endRaw      = typeof body.end      === "string" ? body.end.trim()      : "";
     const locationRaw = typeof body.location === "string" ? body.location.trim() : "";
