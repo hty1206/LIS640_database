@@ -423,7 +423,8 @@ body {
 .detail-description {
   margin-top: 6px;
   padding: 8px 10px;
-  background: #f5f6f8;
+  background: var(--bg);
+  color: var(--text);
   border-radius: 8px;
   font-size: 13px;
   line-height: 1.6;
